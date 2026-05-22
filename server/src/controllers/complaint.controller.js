@@ -6,7 +6,7 @@
 const Complaint = require('../models/Complaint.model');
 const User = require('../models/User.model');
 const Building = require('../models/Building.model');
-const Unit = require('../models/unit.model');
+const Unit = require('../models/Unit.model');
 
 // ==================== CREATE COMPLAINT ====================
 exports.createComplaint = async (req, res) => {
