@@ -16,7 +16,9 @@ router.use((req, res, next) => {
 
 // All settings routes require authentication and admin role
 router.use(protect);
-router.use(authorize('admin'));
+//router.use(authorize('admin'));
+// Allow both admin and super_admin
+router.use(authorize('admin', 'super_admin'));
 
 // ==================== GENERAL SETTINGS ====================
 router.get('/general', (req, res, next) => {

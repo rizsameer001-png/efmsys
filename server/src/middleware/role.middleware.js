@@ -310,7 +310,16 @@ const roleHierarchyMiddleware = (allowedRoles) => {
 };
 
 // Authorize function (alias for roleMiddleware - used in routes)
-const authorize = (allowedRoles) => {
+// const authorize = (allowedRoles) => {
+//   return roleMiddleware(allowedRoles);
+// };
+
+// AUTHORIZE FUNCTION - For ROUTE access control
+const authorize = (...allowedRoles) => {
+  // If no roles specified, default to admin and super_admin
+  if (allowedRoles.length === 0) {
+    allowedRoles = ['admin', 'super_admin'];
+  }
   return roleMiddleware(allowedRoles);
 };
 
