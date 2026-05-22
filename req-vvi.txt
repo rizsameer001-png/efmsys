@@ -1,0 +1,2038 @@
+# Enterprise Facility Management System (FMS)
+
+# Complete Requirements Document (Without SaaS)
+
+---
+
+# 1. Project Overview
+
+Develop a centralized Enterprise Facility Management System (FMS) for managing:
+
+* Residential Buildings
+* Commercial Properties
+* Corporate Offices
+* Malls
+* Hospitals
+* Hotels
+* Industrial Facilities
+
+The system should manage:
+
+* Complaints
+* Tasks
+* Workforce
+* Attendance
+* Payroll
+* Billing
+* Customers
+* Assets
+* Inventory
+* Maintenance Operations
+
+The platform should support:
+
+* Web Admin Panel
+* Employee Mobile App
+* Customer Mobile App
+* Real-time Monitoring
+* Role-Based Access
+* Multi-Building Management
+* Enterprise Workflow Automation
+
+---
+
+# 2. Project Goals
+
+The implementation must be:
+
+## Flexible
+
+* Easy to add new modules
+* Easy to remove modules
+* Configurable workflows
+* Dynamic permissions
+* Dynamic statuses
+* Dynamic forms
+
+---
+
+## Scalable
+
+Support:
+
+* Thousands of employees
+* Multiple buildings
+* High complaint volume
+* Large technician teams
+* Real-time operations
+
+---
+
+## Modular
+
+Every module should work independently.
+
+Example:
+
+```text id="y7j8g9"
+Complaint Module
+Attendance Module
+Payroll Module
+Inventory Module
+Visitor Management Module
+```
+
+Each module should be:
+
+* Independently manageable
+* Configurable
+* Upgradeable
+
+---
+
+# 3. System User Hierarchy
+
+```text id="o5k1z2"
+Super Admin
+   ↓
+Admin
+   ↓
+Manager
+   ↓
+Supervisor
+   ↓
+Technician / Field Staff
+```
+
+Additional Roles:
+
+```text id="5jv4v8"
+HR
+Accountant
+Helpdesk Agent
+Vendor
+Security Staff
+Customer / Resident / Tenant
+```
+
+---
+
+# 4. User Management Module
+
+# Purpose
+
+Manage all users in the system.
+
+---
+
+# Features
+
+## Employee Management
+
+### Employee Fields
+
+* Employee ID
+* Name
+* Email
+* Mobile Number
+* Profile Image
+* Nationality
+* Designation
+* Department
+* Reporting Manager
+* Assigned Building/Site
+* Shift Timing
+* Employment Type
+* Joining Date
+* Status
+
+---
+
+## Customer Management
+
+* Resident details
+* Tenant details
+* Owner details
+* Unit mapping
+* Service history
+* Complaint history
+
+---
+
+## Vendor Management
+
+* Vendor registration
+* Vendor documents
+* Vendor contracts
+* Vendor services
+
+---
+
+# User Features
+
+* Add/Edit/Delete users
+* Bulk import/export
+* Password reset
+* User activation/deactivation
+* Employee document upload
+
+---
+
+# Workflow
+
+```text id="c3v0m1"
+Admin Creates User
+   ↓
+Assign Role
+   ↓
+Assign Building/Site
+   ↓
+User Receives Credentials
+   ↓
+User Access Activated
+```
+
+---
+
+# 5. Role & Permission Management
+
+# Features
+
+* Dynamic role creation
+* Permission-based access
+* Module-level restrictions
+* Building-wise restrictions
+* Feature access control
+
+---
+
+# Permissions
+
+## Examples
+
+* complaint.create
+* complaint.assign
+* payroll.view
+* attendance.approve
+* invoice.generate
+
+---
+
+# Workflow
+
+```text id="f8k3n0"
+Super Admin Creates Role
+   ↓
+Assign Permissions
+   ↓
+Map Role to Users
+   ↓
+Access Rights Applied
+```
+
+---
+
+# 6. Building Management Module
+
+# Structure
+
+```text id="r4d9y5"
+Property
+   ↓
+Building
+   ↓
+Tower/Block
+   ↓
+Floor
+   ↓
+Unit/Flat
+```
+
+---
+
+# Features
+
+## Building Management
+
+* Building details
+* Geo-location
+* Emergency contacts
+* Building type
+* Utility information
+
+---
+
+## Floor Management
+
+* Create floors
+* Floor numbering
+* Floor mapping
+
+---
+
+## Unit Management
+
+* Unit owner
+* Tenant details
+* Occupancy status
+* Billing information
+* Complaint history
+
+---
+
+# Workflow
+
+```text id="v0m6p4"
+Admin Creates Property
+   ↓
+Adds Buildings
+   ↓
+Adds Floors
+   ↓
+Adds Units
+   ↓
+Assigns Residents/Tenants
+```
+
+---
+
+# 7. Complaint Management System
+
+# Purpose
+
+Allow customers/residents to raise complaints.
+
+---
+
+# Complaint Categories
+
+* Electrical
+* Plumbing
+* Cleaning
+* Security
+* HVAC
+* Internet
+* Parking
+* Lift/Elevator
+* Water Leakage
+* Other
+
+---
+
+# Features
+
+* Ticket generation
+* Priority assignment
+* SLA tracking
+* Image/video upload
+* Voice notes
+* Escalation management
+* Customer feedback
+
+---
+
+# Complaint Workflow
+
+```text id="3v9m0j"
+Customer Raises Complaint
+   ↓
+Ticket Generated
+   ↓
+Manager Receives Ticket
+   ↓
+Supervisor Assigns Technician
+   ↓
+Technician Visits Site
+   ↓
+Work Completed
+   ↓
+Proof Uploaded
+   ↓
+Supervisor Verification
+   ↓
+Customer Feedback
+   ↓
+Complaint Closed
+```
+
+---
+
+# Dashboard Features
+
+## Super Admin Dashboard
+
+* Open complaints
+* Pending complaints
+* SLA breached
+* Escalated complaints
+
+---
+
+## Manager Dashboard
+
+* Team complaints
+* Technician workload
+* Complaint performance
+
+---
+
+# 8. Task Assignment & Monitoring
+
+# Features
+
+* Task creation
+* Priority levels
+* SLA timers
+* Task assignment
+* Multi-image upload
+* GPS verification
+* Due dates
+* Checklists
+
+---
+
+# Task Workflow
+
+```text id="6r7o1x"
+Task Created
+   ↓
+Assigned to Manager
+   ↓
+Assigned to Supervisor
+   ↓
+Assigned to Technician
+   ↓
+Task Accepted
+   ↓
+Work Started
+   ↓
+Images Uploaded
+   ↓
+Verification
+   ↓
+Task Closed
+```
+
+---
+
+# Task Dashboard
+
+Show:
+
+* Active tasks
+* Pending tasks
+* Completed tasks
+* Delayed tasks
+* SLA breached tasks
+
+---
+
+# 9. Attendance Management
+
+# Features
+
+* GPS attendance
+* QR attendance
+* Face recognition
+* Shift scheduling
+* Overtime tracking
+* Late mark tracking
+
+---
+
+# Attendance Workflow
+
+```text id="1w8v7l"
+Employee Check-In
+   ↓
+GPS/Face Validation
+   ↓
+Attendance Recorded
+   ↓
+Manager Dashboard Updated
+```
+
+---
+
+# Dashboard Features
+
+## Super Admin
+
+* Present employees
+* Absent employees
+* Late employees
+* On-site staff
+
+---
+
+## Manager/Supervisor
+
+* Team attendance
+* Shift status
+* Field attendance
+
+---
+
+# 10. Leave Management
+
+# Features
+
+* Leave application
+* Leave approval
+* Leave balance
+* Leave calendar
+* Multi-level approval
+* Leave history
+
+---
+
+# Leave Workflow
+
+```text id="d0n7v4"
+Employee Applies Leave
+   ↓
+Supervisor Approval
+   ↓
+Manager Approval
+   ↓
+HR/Admin Approval
+   ↓
+Leave Updated
+```
+
+---
+
+# 11. GPS Live Tracking
+
+# Features
+
+* Real-time technician tracking
+* Route history
+* Geo-location validation
+* Site verification
+* Geo-fencing
+* Travel tracking
+
+---
+
+# Workflow
+
+```text id="q6n4w1"
+Technician Starts Shift
+   ↓
+GPS Enabled
+   ↓
+Location Synced
+   ↓
+Manager Monitors Live Map
+```
+
+---
+
+# 12. Customer Service Booking Module
+
+# Features
+
+## Services
+
+* Deep Cleaning
+* Plumbing
+* Electrical Repair
+* AC Service
+* Pest Control
+* Carpentry
+
+---
+
+# Service Features
+
+* Appointment booking
+* Time slot management
+* Technician assignment
+* Online payment
+* Service history
+
+---
+
+# Workflow
+
+```text id="u9x0b7"
+Customer Books Service
+   ↓
+Time Slot Selected
+   ↓
+Technician Assigned
+   ↓
+Service Completed
+   ↓
+Invoice Generated
+   ↓
+Payment Completed
+```
+
+---
+
+# 13. Billing & Invoice Management
+
+# Features
+
+* Invoice generation
+* Tax/VAT support
+* Payment tracking
+* Revenue tracking
+* PDF invoices
+* Refund management
+
+---
+
+# Payment Methods
+
+* UPI
+* Credit Card
+* Debit Card
+* Wallets
+* Net Banking
+
+---
+
+# Workflow
+
+```text id="n5m7j2"
+Service Completed
+   ↓
+Invoice Generated
+   ↓
+Customer Pays
+   ↓
+Payment Confirmed
+   ↓
+Revenue Updated
+```
+
+---
+
+# 14. Chat & Communication Module
+
+# Features
+
+* One-to-one chat
+* Group chat
+* Complaint-based chat
+* Task-based chat
+* Voice notes
+* Image/file sharing
+* Push notifications
+
+---
+
+# Admin Controls
+
+Admin can:
+
+* Enable/disable chat
+* Restrict media uploads
+* Restrict technician chat
+
+---
+
+# 15. Notifications & Alerts
+
+# Features
+
+## Notifications
+
+* Task assigned
+* Complaint updates
+* SLA breach alerts
+* Attendance reminders
+* Leave approvals
+* Invoice reminders
+
+---
+
+# Channels
+
+* Push notifications
+* SMS
+* Email
+* WhatsApp (optional)
+
+---
+
+# Workflow
+
+```text id="1m7o4t"
+Event Triggered
+   ↓
+Notification Engine
+   ↓
+Push/SMS/Email Sent
+```
+
+---
+
+# 16. Reports & Analytics
+
+# Operational Reports
+
+* Complaint reports
+* Task reports
+* Attendance reports
+* Leave reports
+
+---
+
+# Financial Reports
+
+* Revenue reports
+* Invoice reports
+* Payment reports
+
+---
+
+# Employee Reports
+
+* Productivity reports
+* GPS activity reports
+* Performance reports
+
+---
+
+# Export Formats
+
+* PDF
+* Excel
+* CSV
+
+---
+
+# Workflow
+
+```text id="4n0v2w"
+System Data Collected
+   ↓
+Analytics Engine Processes Data
+   ↓
+Reports Generated
+   ↓
+Export Available
+```
+
+---
+
+# 17. Payroll & Salary Management
+
+# Features
+
+* Monthly payroll
+* Salary calculation
+* Dynamic salary structure
+* Overtime calculation
+* Tax deductions
+* Salary slips
+* Payroll reports
+
+---
+
+# Salary Components
+
+## Earnings
+
+* Basic Salary
+* HRA
+* Conveyance
+* Incentives
+* Overtime
+
+---
+
+## Deductions
+
+* Tax
+* Insurance
+* Loan deduction
+* PF/ESI
+
+---
+
+# Workflow
+
+```text id="9w0q5j"
+Attendance Finalized
+   ↓
+Leave Adjusted
+   ↓
+Salary Calculated
+   ↓
+Payroll Approved
+   ↓
+Salary Slip Generated
+```
+
+---
+
+# UAE/USA/UK Support
+
+## UAE
+
+* WPS export
+* Gratuity calculation
+* Visa expiry tracking
+
+---
+
+## USA
+
+* W-2/1099
+* Federal overtime rules
+
+---
+
+## UK
+
+* PAYE
+* Pension deductions
+* HMRC exports
+
+---
+
+# 18. Preventive Maintenance Module
+
+# Features
+
+* Scheduled maintenance
+* AMC contracts
+* Maintenance checklist
+* Auto work order generation
+* Equipment maintenance
+
+---
+
+# Workflow
+
+```text id="e8k6m1"
+Asset Added
+   ↓
+Maintenance Schedule Created
+   ↓
+Auto Work Order Generated
+   ↓
+Technician Assigned
+   ↓
+Checklist Completed
+   ↓
+Maintenance Closed
+```
+
+---
+
+# 19. Asset Management
+
+# Features
+
+* Asset registration
+* QR/barcode tagging
+* Warranty tracking
+* Service history
+* Asset depreciation
+
+---
+
+# Workflow
+
+```text id="v1b3x0"
+Asset Purchased
+   ↓
+Asset Registered
+   ↓
+Maintenance Scheduled
+   ↓
+Asset History Updated
+```
+
+---
+
+# 20. Inventory & Procurement Management
+
+# Features
+
+* Spare parts inventory
+* Warehouse management
+* Purchase requests
+* Purchase orders
+* Stock alerts
+
+---
+
+# Workflow
+
+```text id="7m5n0k"
+Technician Requests Material
+   ↓
+Supervisor Approval
+   ↓
+Purchase Order Created
+   ↓
+Vendor Supplies Material
+   ↓
+Inventory Updated
+```
+
+---
+
+# 21. Vendor & Contractor Management
+
+# Features
+
+* Vendor onboarding
+* Vendor documents
+* Vendor contracts
+* Vendor invoices
+* Vendor SLA tracking
+
+---
+
+# Workflow
+
+```text id="k9x4v3"
+Vendor Registered
+   ↓
+Documents Verified
+   ↓
+Contract Approved
+   ↓
+Work Assigned
+   ↓
+Vendor Performance Evaluated
+```
+
+---
+
+# 22. Lease & Tenant Management
+
+# Features
+
+* Lease agreements
+* Rent invoices
+* Lease renewal reminders
+* Security deposit tracking
+* Tenant onboarding
+
+---
+
+# Workflow
+
+```text id="z7p4m0"
+Tenant Added
+   ↓
+Lease Created
+   ↓
+Rent Invoice Generated
+   ↓
+Payment Received
+   ↓
+Renewal Reminder Sent
+```
+
+---
+
+# 23. Visitor Management System
+
+# Features
+
+* Visitor pre-registration
+* QR visitor passes
+* Vehicle entry logs
+* Security approvals
+* Delivery tracking
+
+---
+
+# Workflow
+
+```text id="b4n9k8"
+Visitor Registered
+   ↓
+QR Pass Generated
+   ↓
+Security Verifies Entry
+   ↓
+Visitor Check-In Logged
+```
+
+---
+
+# 24. HSE & Permit-To-Work Module
+
+# Features
+
+* Incident reporting
+* Safety inspections
+* PPE checklist
+* Work permits
+* Risk assessments
+
+---
+
+# Workflow
+
+```text id="0m4v7x"
+Technician Requests Permit
+   ↓
+Safety Officer Approval
+   ↓
+Manager Approval
+   ↓
+Work Starts
+   ↓
+Permit Closed
+```
+
+---
+
+# 25. Activity Logs & Audit Trail
+
+# Features
+
+Track:
+
+* Login/logout
+* User actions
+* Role changes
+* Task updates
+* Payments
+* Attendance actions
+
+---
+
+# Log Details
+
+* User
+* Action
+* Timestamp
+* IP address
+* Device details
+
+---
+
+# Workflow
+
+```text id="c9m1q6"
+User Action Performed
+   ↓
+System Captures Event
+   ↓
+Audit Log Saved
+```
+
+---
+
+# 26. Dynamic System Requirements
+
+# IMPORTANT IMPLEMENTATION REQUIREMENT
+
+System must support:
+
+---
+
+# Dynamic Workflows
+
+Workflow should be configurable.
+
+Example:
+
+```text id="x5m2p1"
+Complaint
+   ↓
+Manager
+   ↓
+Supervisor
+   ↓
+Technician
+```
+
+Can be changed without coding.
+
+---
+
+# Dynamic Status Engine
+
+Admin can create statuses:
+
+* Open
+* Assigned
+* In Progress
+* Hold
+* Completed
+* Verified
+* Closed
+
+---
+
+# Dynamic Form Builder
+
+Admin can create:
+
+* Inspection forms
+* Complaint forms
+* Maintenance checklists
+
+Without developer changes.
+
+---
+
+# Feature Toggle System
+
+Enable/Disable modules:
+
+* Payroll
+* Inventory
+* Visitor Management
+* HSE
+* Chat
+
+Without code changes.
+
+---
+
+# 27. API & Integration Requirements
+
+# Payment Integrations
+
+* Razorpay
+* Stripe
+* PayPal
+
+---
+
+# Communication Integrations
+
+* Twilio
+* WhatsApp API
+* Firebase Notifications
+
+---
+
+# Accounting Integrations
+
+* QuickBooks
+* Zoho Books
+* Xero
+
+---
+
+# Maps & GPS
+
+* Google Maps API
+
+---
+
+# 28. End-to-End System Workflows
+
+# Complaint Flow
+
+```text id="9m2w4q"
+Customer App
+   ↓
+Complaint API
+   ↓
+Ticket Database
+   ↓
+Manager Dashboard
+   ↓
+Technician Assignment
+   ↓
+GPS Site Verification
+   ↓
+Work Completion
+   ↓
+Customer Feedback
+   ↓
+Reports & Analytics
+```
+
+---
+
+# Attendance Flow
+
+```text id="f7x3p9"
+Employee App
+   ↓
+GPS/Face Verification
+   ↓
+Attendance Database
+   ↓
+Manager Dashboard
+   ↓
+Payroll System
+```
+
+---
+
+# Billing Flow
+
+```text id="m0v7k1"
+Service Completed
+   ↓
+Invoice Generated
+   ↓
+Payment Gateway
+   ↓
+Payment Confirmation
+   ↓
+Revenue Reports Updated
+```
+
+---
+
+# Preventive Maintenance Flow
+
+```text id="1q5v8n"
+Asset Registered
+   ↓
+Maintenance Schedule Created
+   ↓
+Auto Work Order Generated
+   ↓
+Technician Assigned
+   ↓
+Checklist Completed
+   ↓
+Asset History Updated
+```
+
+---
+
+# 29. Recommended Technology Stack
+
+# Frontend
+
+* React.js / Next.js
+* Tailwind CSS
+
+---
+
+# Mobile Apps
+
+* Flutter
+  or
+* React Native
+
+---
+
+# Backend
+
+* Node.js + NestJS
+  or
+* Node.js + Express.js
+
+---
+
+# Database
+
+* PostgreSQL
+* MongoDB (optional)
+* Redis Cache
+
+---
+
+# Realtime Services
+
+* Socket.IO
+* Firebase
+
+---
+
+# Cloud Storage
+
+* AWS S3
+* Cloudinary
+
+---
+
+# Maps & GPS
+
+* Google Maps API
+
+---
+
+# 30. Final Core Modules List
+
+# Core Modules
+
+* Authentication
+* User Management
+* Role Management
+* Building Management
+* Complaint Management
+* Task Management
+* Attendance Management
+* Leave Management
+* GPS Tracking
+* Customer Portal
+* Service Booking
+* Billing & Payments
+* Reports & Analytics
+* Notifications
+* Chat System
+* Audit Logs
+
+---
+
+# Enterprise Modules
+
+* Payroll
+* Preventive Maintenance
+* Asset Management
+* Inventory Management
+* Procurement
+* Vendor Management
+* Lease Management
+* Visitor Management
+* HSE & Permit-To-Work
+* Advanced BI Analytics
+* Multi-country Compliance Support
+
+
+# Enterprise Facility Management System (FMS)
+
+# Complete Operational Data Flow Preview
+
+This preview explains:
+
+* How users are onboarded
+* How roles work
+* How data flows between departments
+* How tasks move from Admin → Manager → Supervisor → Technician
+* How Customers/Residents interact with the system
+* How HR, Accountant, Security, Vendor, Helpdesk work together
+
+---
+
+# 1. Complete Organizational Hierarchy
+
+```text id="9x0p4m"
+Super Admin
+   ↓
+Admin
+   ↓
+Manager
+   ↓
+Supervisor
+   ↓
+Technician / Field Staff
+```
+
+Additional Operational Roles:
+
+```text id="7m1q2z"
+HR
+Accountant
+Helpdesk Agent
+Security Staff
+Vendor
+Customer / Resident / Tenant
+```
+
+---
+
+# 2. Role Management System
+
+# Dynamic Role Management
+
+Admin can:
+
+* Add roles
+* Edit roles
+* Delete roles
+* Assign permissions
+* Restrict module access
+* Restrict building/site access
+
+---
+
+# Example Roles
+
+| Role              | Responsibility                |
+| ----------------- | ----------------------------- |
+| Super Admin       | Full system control           |
+| Admin             | Operational management        |
+| Manager           | Team & building management    |
+| Supervisor        | Field operations              |
+| Technician        | Task execution                |
+| HR                | Employee onboarding & payroll |
+| Accountant        | Billing & finance             |
+| Helpdesk Agent    | Complaint handling            |
+| Security Staff    | Visitor & gate management     |
+| Vendor            | External service provider     |
+| Customer/Resident | Complaints & service requests |
+
+---
+
+# 3. Employee Onboarding Flow
+
+# Purpose
+
+All employees must be onboarded through HR/Admin.
+
+---
+
+# Employee Onboarding Workflow
+
+```text id="4w8n2q"
+HR/Admin Creates Employee
+   ↓
+Role Assigned
+   ↓
+Department Assigned
+   ↓
+Building/Site Assigned
+   ↓
+Manager Assigned
+   ↓
+Login Credentials Generated
+   ↓
+Employee Receives Access
+   ↓
+Attendance & Payroll Activated
+```
+
+---
+
+# Employee Master Data
+
+## HR Stores
+
+* Employee ID
+* Passport/Visa
+* Emirates ID
+* Tax ID
+* Salary Structure
+* Shift
+* Department
+* Emergency Contact
+* Bank Details
+* Documents
+
+---
+
+# Data Visibility
+
+| Role       | Can View             |
+| ---------- | -------------------- |
+| HR         | All employee data    |
+| Manager    | Assigned team        |
+| Supervisor | Assigned field staff |
+| Accountant | Payroll & salary     |
+| Admin      | Entire company       |
+
+---
+
+# 4. User Access & Permission Flow
+
+# Example Permission Logic
+
+## Manager Permissions
+
+Can:
+
+* View assigned buildings
+* Assign tasks
+* Approve leave
+* Monitor attendance
+* View complaints
+
+Cannot:
+
+* Access payroll configuration
+* Delete company data
+
+---
+
+## Technician Permissions
+
+Can:
+
+* View assigned tasks
+* Update task status
+* Upload work proof
+* Mark attendance
+
+Cannot:
+
+* Assign tasks
+* View payroll reports
+* Access admin settings
+
+---
+
+# 5. Complaint Management Data Flow
+
+# Customer Complaint Journey
+
+```text id="x0k2p9"
+Customer/Resident
+   ↓
+Raise Complaint
+   ↓
+Helpdesk/Admin Receives Ticket
+   ↓
+Manager Reviews Complaint
+   ↓
+Supervisor Assigns Technician
+   ↓
+Technician Visits Site
+   ↓
+GPS Check-In Verified
+   ↓
+Work Completed
+   ↓
+Images Uploaded
+   ↓
+Supervisor Verifies Work
+   ↓
+Customer Gives Feedback
+   ↓
+Complaint Closed
+```
+
+---
+
+# Role Responsibilities
+
+| Role       | Responsibility        |
+| ---------- | --------------------- |
+| Customer   | Raise complaint       |
+| Helpdesk   | Create/manage ticket  |
+| Manager    | Monitor SLA           |
+| Supervisor | Assign technician     |
+| Technician | Resolve issue         |
+| Admin      | Escalation monitoring |
+
+---
+
+# Complaint Dashboard Visibility
+
+## Super Admin Dashboard
+
+Shows:
+
+* Total complaints
+* SLA breached
+* Escalations
+* Technician performance
+
+---
+
+## Manager Dashboard
+
+Shows:
+
+* Team complaints
+* Pending complaints
+* Delayed complaints
+
+---
+
+## Supervisor Dashboard
+
+Shows:
+
+* Assigned technicians
+* Field activity
+* Verification pending
+
+---
+
+# 6. Task Assignment Workflow
+
+# End-to-End Task Data Flow
+
+```text id="7z9n3k"
+Admin Creates Task
+   ↓
+Manager Receives Task
+   ↓
+Supervisor Assigns Technician
+   ↓
+Technician Accepts Task
+   ↓
+GPS Site Verification
+   ↓
+Work Starts
+   ↓
+Material Request (if required)
+   ↓
+Supervisor Monitors Progress
+   ↓
+Technician Uploads Images
+   ↓
+Supervisor Verifies Work
+   ↓
+Manager Approves Completion
+   ↓
+Task Closed
+```
+
+---
+
+# Data Shared Between Roles
+
+| Role       | Data Access    |
+| ---------- | -------------- |
+| Admin      | All tasks      |
+| Manager    | Team tasks     |
+| Supervisor | Assigned tasks |
+| Technician | Own tasks only |
+
+---
+
+# 7. Attendance Monitoring Data Flow
+
+# Employee Attendance Journey
+
+```text id="p8m4x0"
+Employee Opens Mobile App
+   ↓
+GPS/Face Check-In
+   ↓
+Attendance Saved
+   ↓
+Manager Dashboard Updated
+   ↓
+HR Attendance Report Updated
+   ↓
+Payroll System Synced
+```
+
+---
+
+# Attendance Visibility
+
+| Role        | Can Monitor    |
+| ----------- | -------------- |
+| Super Admin | Entire company |
+| Manager     | Assigned teams |
+| Supervisor  | Field staff    |
+| HR          | All attendance |
+| Employee    | Own attendance |
+
+---
+
+# 8. Leave Management Workflow
+
+```text id="v3n8q5"
+Employee Applies Leave
+   ↓
+Supervisor Reviews
+   ↓
+Manager Approves
+   ↓
+HR Final Approval
+   ↓
+Attendance Updated
+   ↓
+Payroll Deduction Updated
+```
+
+---
+
+# Leave Data Flow
+
+| Department | Action               |
+| ---------- | -------------------- |
+| Employee   | Apply leave          |
+| Supervisor | Initial review       |
+| Manager    | Operational approval |
+| HR         | Final approval       |
+| Payroll    | Salary deduction     |
+
+---
+
+# 9. Service Booking Workflow (Customer)
+
+# Customer Service Journey
+
+```text id="5n2k7x"
+Customer Opens App
+   ↓
+Selects Service
+   ↓
+Chooses Time Slot
+   ↓
+Booking Created
+   ↓
+Manager/Supervisor Assigns Technician
+   ↓
+Technician Visits Site
+   ↓
+Service Completed
+   ↓
+Invoice Generated
+   ↓
+Online Payment
+   ↓
+Service History Updated
+```
+
+---
+
+# Customer Can View
+
+* Complaint history
+* Service history
+* Payment history
+* Technician tracking
+* Invoices
+* Chat support
+
+---
+
+# 10. Billing & Accountant Workflow
+
+# Billing Data Flow
+
+```text id="8m4z1v"
+Service Completed
+   ↓
+Invoice Auto Generated
+   ↓
+Accountant Reviews
+   ↓
+Customer Receives Invoice
+   ↓
+Payment Gateway Confirms Payment
+   ↓
+Revenue Dashboard Updated
+```
+
+---
+
+# Accountant Responsibilities
+
+## Can Manage
+
+* Invoices
+* Payments
+* Refunds
+* Revenue reports
+* Payroll processing
+
+---
+
+# Accountant Dashboard
+
+Shows:
+
+* Daily revenue
+* Pending invoices
+* Paid invoices
+* Payroll reports
+* Tax/VAT reports
+
+---
+
+# 11. HR Department Workflow
+
+# HR Responsibilities
+
+## Employee Lifecycle
+
+```text id="x6m9q2"
+Employee Onboarding
+   ↓
+Document Verification
+   ↓
+Attendance Monitoring
+   ↓
+Leave Management
+   ↓
+Payroll Processing
+   ↓
+Performance Tracking
+   ↓
+Exit Management
+```
+
+---
+
+# HR Dashboard
+
+Shows:
+
+* Employee count
+* Attendance summary
+* Leave reports
+* Payroll status
+* Employee documents
+
+---
+
+# 12. Vendor Workflow
+
+# Vendor Data Flow
+
+```text id="2q8v5m"
+Vendor Registered
+   ↓
+Documents Uploaded
+   ↓
+Contract Approved
+   ↓
+Work Order Assigned
+   ↓
+Vendor Completes Work
+   ↓
+Invoice Submitted
+   ↓
+Payment Approved
+```
+
+---
+
+# Vendor Access
+
+Vendor can:
+
+* View assigned work orders
+* Upload completion proof
+* Submit invoices
+* View payment status
+
+Cannot:
+
+* Access employee data
+* Access other vendors
+
+---
+
+# 13. Security Staff Workflow
+
+# Visitor Management Flow
+
+```text id="0m2p7x"
+Visitor Pre-Registered
+   ↓
+QR Pass Generated
+   ↓
+Security Scans QR
+   ↓
+Entry Logged
+   ↓
+Resident Notification Sent
+   ↓
+Visitor Exit Logged
+```
+
+---
+
+# Security Staff Responsibilities
+
+Can:
+
+* Verify visitors
+* Manage gate entries
+* Track deliveries
+* Monitor vehicle logs
+
+---
+
+# 14. Helpdesk Agent Workflow
+
+# Helpdesk Responsibilities
+
+```text id="r9m1w4"
+Customer Calls/Chats
+   ↓
+Helpdesk Creates Ticket
+   ↓
+Complaint Assigned
+   ↓
+Follow-Up Monitoring
+   ↓
+Escalation if Delayed
+```
+
+---
+
+# Helpdesk Dashboard
+
+Shows:
+
+* Open complaints
+* Escalated tickets
+* SLA nearing breach
+* Customer feedback
+
+---
+
+# 15. Payroll & Salary Data Flow
+
+# Payroll Workflow
+
+```text id="7k0m5p"
+Attendance Finalized
+   ↓
+Leave Deductions Applied
+   ↓
+Overtime Calculated
+   ↓
+Payroll Generated
+   ↓
+HR Reviews
+   ↓
+Accountant Approves
+   ↓
+Salary Slip Sent
+```
+
+---
+
+# Payroll Access
+
+| Role       | Access               |
+| ---------- | -------------------- |
+| HR         | Salary processing    |
+| Accountant | Payroll approval     |
+| Employee   | Own salary slip      |
+| Admin      | Full payroll reports |
+
+---
+
+# 16. GPS Live Tracking Workflow
+
+# Real-Time Field Monitoring
+
+```text id="3m7v1x"
+Technician Starts Shift
+   ↓
+GPS Activated
+   ↓
+Live Coordinates Sent
+   ↓
+Manager Dashboard Updated
+   ↓
+Site Visit Verified
+   ↓
+Travel Logs Stored
+```
+
+---
+
+# GPS Visibility
+
+| Role       | Access              |
+| ---------- | ------------------- |
+| Manager    | Team live locations |
+| Supervisor | Assigned staff      |
+| Admin      | All staff           |
+| Technician | Own location logs   |
+
+---
+
+# 17. Notification & Escalation Data Flow
+
+# Notification Workflow
+
+```text id="w4q8n2"
+Event Triggered
+   ↓
+Notification Engine
+   ↓
+Push/SMS/Email Sent
+   ↓
+Acknowledgement Logged
+```
+
+---
+
+# Notification Examples
+
+| Event            | Notification To    |
+| ---------------- | ------------------ |
+| New Complaint    | Manager/Supervisor |
+| Task Assigned    | Technician         |
+| Leave Approved   | Employee           |
+| SLA Breached     | Admin/Manager      |
+| Payment Received | Accountant         |
+
+---
+
+# 18. Complete Enterprise Operational Flow
+
+# End-to-End Business Workflow
+
+```text id="9p4m0x"
+Customer Complaint
+   ↓
+Helpdesk Ticket Creation
+   ↓
+Manager Review
+   ↓
+Supervisor Assignment
+   ↓
+Technician Execution
+   ↓
+GPS Validation
+   ↓
+Inventory Usage
+   ↓
+Supervisor Verification
+   ↓
+Invoice Generation
+   ↓
+Customer Payment
+   ↓
+Accountant Reconciliation
+   ↓
+Reports & Analytics
+   ↓
+Audit Logs Stored
+```
+
+---
+
+# 19. Dynamic Role & Workflow Support
+
+# IMPORTANT REQUIREMENT
+
+Admin must be able to:
+
+* Add new roles
+* Remove roles
+* Change workflows
+* Add new approval levels
+* Add new departments
+* Configure permissions dynamically
+
+WITHOUT developer changes.
+
+---
+
+# Example Future Roles
+
+Can easily add:
+
+* Safety Officer
+* Regional Manager
+* Operations Director
+* Compliance Officer
+* Procurement Manager
+
+---
+
+# 20. Final Recommended Operational Structure
+
+# Operational Departments
+
+| Department  | Primary Modules            |
+| ----------- | -------------------------- |
+| Operations  | Complaints, Tasks          |
+| HR          | Attendance, Leave, Payroll |
+| Finance     | Billing, Invoices          |
+| Helpdesk    | Customer complaints        |
+| Security    | Visitor management         |
+| Procurement | Inventory                  |
+| Maintenance | Preventive maintenance     |
+| Management  | Analytics & reports        |
+
