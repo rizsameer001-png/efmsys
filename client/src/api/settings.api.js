@@ -1,288 +1,693 @@
-// client/src/api/settings.api.js
+// import api from './axios.config';
+
+// export const settingsApi = {
+//   // General Settings
+//   getGeneralSettings: () => api.get('/settings/general'),
+//   updateGeneralSettings: (data) => api.put('/settings/general', data),
+
+//   // Email Settings
+//   getEmailSettings: () => api.get('/settings/email'),
+//   updateEmailSettings: (data) => api.put('/settings/email', data),
+//   testEmailConfig: (email) => api.post('/settings/test-email', { email }),
+
+//   // Notification Settings
+//   getNotificationSettings: () => api.get('/settings/notifications'),
+//   updateNotificationSettings: (data) => api.put('/settings/notifications', data),
+
+//   // Integration Settings
+//   getIntegrationSettings: () => api.get('/settings/integrations'),
+//   updateIntegrationSettings: (data) => api.put('/settings/integrations', data),
+//   generateApiKey: (data) => api.post('/settings/integrations/api-keys', data),
+//   revokeApiKey: (keyId) => api.delete(`/settings/integrations/api-keys/${keyId}`),
+
+//   // Theme Settings
+//   getThemeSettings: () => api.get('/settings/theme'),
+//   updateThemeSettings: (data) => api.put('/settings/theme', data),
+
+//   // System Settings
+//   getSystemSettings: () => api.get('/settings/system'),
+//   updateSystemSettings: (data) => api.put('/settings/system', data),
+//   testConnection: (type, config) => api.post('/settings/test-connection', { type, config }),
+
+//   // Backup Settings
+//   getBackups: () => api.get('/settings/backups'),
+//   createBackup: (data) => api.post('/settings/backups', data),
+//   downloadBackup: (backupId) => api.get(`/settings/backups/${backupId}/download`, { responseType: 'blob' }),
+//   restoreBackup: (backupId) => api.post(`/settings/backups/${backupId}/restore`),
+//   deleteBackup: (backupId) => api.delete(`/settings/backups/${backupId}`)
+// };
+
+
+
+
+// import api from './axios.config';
+
+// // Debug flag - can be controlled via environment variable
+// const DEBUG = import.meta.env.VITE_DEBUG_API === 'true';
+
+// // Helper for debug logging
+// const debugLog = (method, url, data = null) => {
+//   if (DEBUG) {
+//     console.log(`[Settings API] ${method} ${url}`);
+//     if (data) console.log('Request Data:', data);
+//   }
+// };
+
+// // Error handler wrapper
+// const handleApiCall = async (apiCall, method, url, data = null) => {
+//   try {
+//     debugLog(method, url, data);
+//     const response = await apiCall();
+    
+//     if (DEBUG) {
+//       console.log(`[Settings API] ${method} ${url} - Success:`, response.status);
+//     }
+    
+//     return response;
+//   } catch (error) {
+//     console.error(`[Settings API Error] ${method} ${url}:`, error.response?.data || error.message);
+    
+//     // Enhanced error object with more details
+//     const enhancedError = {
+//       ...error,
+//       userMessage: error.response?.data?.error || 'An error occurred. Please try again.',
+//       statusCode: error.response?.status,
+//       endpoint: url,
+//       method: method
+//     };
+    
+//     throw enhancedError;
+//   }
+// };
+
+// export const settingsApi = {
+//   // ==================== GENERAL SETTINGS ====================
+//   getGeneralSettings: async () => {
+//     return handleApiCall(
+//       () => api.get('/settings/general'),
+//       'GET',
+//       '/settings/general'
+//     );
+//   },
+
+//   updateGeneralSettings: async (data) => {
+//     return handleApiCall(
+//       () => api.put('/settings/general', data),
+//       'PUT',
+//       '/settings/general',
+//       data
+//     );
+//   },
+
+//   // ==================== EMAIL SETTINGS ====================
+//   getEmailSettings: async () => {
+//     return handleApiCall(
+//       () => api.get('/settings/email'),
+//       'GET',
+//       '/settings/email'
+//     );
+//   },
+
+//   updateEmailSettings: async (data) => {
+//     // Remove masked password before sending
+//     const cleanData = { ...data };
+//     if (cleanData.smtp?.auth?.pass === '********') {
+//       delete cleanData.smtp.auth.pass;
+//     }
+    
+//     return handleApiCall(
+//       () => api.put('/settings/email', cleanData),
+//       'PUT',
+//       '/settings/email',
+//       cleanData
+//     );
+//   },
+
+//   testEmailConfig: async (email) => {
+//     if (!email) {
+//       throw new Error('Email address is required');
+//     }
+    
+//     return handleApiCall(
+//       () => api.post('/settings/test-email', { email }),
+//       'POST',
+//       '/settings/test-email',
+//       { email }
+//     );
+//   },
+
+//   // ==================== NOTIFICATION SETTINGS ====================
+//   getNotificationSettings: async () => {
+//     return handleApiCall(
+//       () => api.get('/settings/notifications'),
+//       'GET',
+//       '/settings/notifications'
+//     );
+//   },
+
+//   updateNotificationSettings: async (data) => {
+//     return handleApiCall(
+//       () => api.put('/settings/notifications', data),
+//       'PUT',
+//       '/settings/notifications',
+//       data
+//     );
+//   },
+
+//   // ==================== INTEGRATION SETTINGS ====================
+//   getIntegrationSettings: async () => {
+//     return handleApiCall(
+//       () => api.get('/settings/integrations'),
+//       'GET',
+//       '/settings/integrations'
+//     );
+//   },
+
+//   updateIntegrationSettings: async (data) => {
+//     // Remove sensitive data from logs if needed
+//     const safeData = { ...data };
+//     if (safeData.slack?.webhookUrl) {
+//       safeData.slack.webhookUrl = '[REDACTED]';
+//     }
+//     if (safeData.teams?.webhookUrl) {
+//       safeData.teams.webhookUrl = '[REDACTED]';
+//     }
+    
+//     debugLog('PUT', '/settings/integrations (data redacted)', safeData);
+    
+//     return handleApiCall(
+//       () => api.put('/settings/integrations', data),
+//       'PUT',
+//       '/settings/integrations',
+//       data
+//     );
+//   },
+
+//   generateApiKey: async (data) => {
+//     if (!data.name) {
+//       throw new Error('API key name is required');
+//     }
+    
+//     return handleApiCall(
+//       () => api.post('/settings/integrations/api-keys', data),
+//       'POST',
+//       '/settings/integrations/api-keys',
+//       data
+//     );
+//   },
+
+//   revokeApiKey: async (keyId) => {
+//     if (!keyId) {
+//       throw new Error('API key ID is required');
+//     }
+    
+//     return handleApiCall(
+//       () => api.delete(`/settings/integrations/api-keys/${keyId}`),
+//       'DELETE',
+//       `/settings/integrations/api-keys/${keyId}`
+//     );
+//   },
+
+//   // ==================== THEME SETTINGS ====================
+//   getThemeSettings: async () => {
+//     return handleApiCall(
+//       () => api.get('/settings/theme'),
+//       'GET',
+//       '/settings/theme'
+//     );
+//   },
+
+//   updateThemeSettings: async (data) => {
+//     return handleApiCall(
+//       () => api.put('/settings/theme', data),
+//       'PUT',
+//       '/settings/theme',
+//       data
+//     );
+//   },
+
+//   // ==================== SYSTEM SETTINGS ====================
+//   getSystemSettings: async () => {
+//     return handleApiCall(
+//       () => api.get('/settings/system'),
+//       'GET',
+//       '/settings/system'
+//     );
+//   },
+
+//   updateSystemSettings: async (data) => {
+//     return handleApiCall(
+//       () => api.put('/settings/system', data),
+//       'PUT',
+//       '/settings/system',
+//       data
+//     );
+//   },
+
+//   testConnection: async (type, config) => {
+//     if (!type) {
+//       throw new Error('Connection type is required');
+//     }
+    
+//     return handleApiCall(
+//       () => api.post('/settings/test-connection', { type, config }),
+//       'POST',
+//       '/settings/test-connection',
+//       { type, config: config ? '[CONFIG PROVIDED]' : undefined }
+//     );
+//   },
+
+//   // ==================== BACKUP SETTINGS ====================
+//   getBackups: async () => {
+//     return handleApiCall(
+//       () => api.get('/settings/backups'),
+//       'GET',
+//       '/settings/backups'
+//     );
+//   },
+
+//   createBackup: async (data = {}) => {
+//     return handleApiCall(
+//       () => api.post('/settings/backups', data),
+//       'POST',
+//       '/settings/backups',
+//       data
+//     );
+//   },
+
+//   downloadBackup: async (backupId) => {
+//     if (!backupId) {
+//       throw new Error('Backup ID is required');
+//     }
+    
+//     try {
+//       debugLog('GET', `/settings/backups/${backupId}/download (blob)`);
+//       const response = await api.get(`/settings/backups/${backupId}/download`, {
+//         responseType: 'blob'
+//       });
+      
+//       if (DEBUG) {
+//         console.log(`[Settings API] Download backup - Success:`, response.status);
+//       }
+      
+//       return response;
+//     } catch (error) {
+//       console.error(`[Settings API Error] Download backup:`, error.response?.data || error.message);
+//       throw error;
+//     }
+//   },
+
+//   restoreBackup: async (backupId) => {
+//     if (!backupId) {
+//       throw new Error('Backup ID is required');
+//     }
+    
+//     return handleApiCall(
+//       () => api.post(`/settings/backups/${backupId}/restore`),
+//       'POST',
+//       `/settings/backups/${backupId}/restore`
+//     );
+//   },
+
+//   deleteBackup: async (backupId) => {
+//     if (!backupId) {
+//       throw new Error('Backup ID is required');
+//     }
+    
+//     return handleApiCall(
+//       () => api.delete(`/settings/backups/${backupId}`),
+//       'DELETE',
+//       `/settings/backups/${backupId}`
+//     );
+//   }
+// };
+
+// // Export a helper to check API health
+// export const checkSettingsHealth = async () => {
+//   try {
+//     const response = await api.get('/settings/general');
+//     return { success: true, message: 'Settings API is healthy' };
+//   } catch (error) {
+//     return { 
+//       success: false, 
+//       message: 'Settings API is not responding',
+//       error: error.message 
+//     };
+//   }
+// };
+
+// export default settingsApi;
+
+
+
+
+
+
 import api from './axios.config';
+
+// Debug flag - can be controlled via environment variable
+const DEBUG = import.meta.env.VITE_DEBUG_API === 'true';
+
+// Helper for debug logging
+const debugLog = (method, url, data = null) => {
+  if (DEBUG) {
+    console.log(`[Settings API] ${method} ${url}`);
+    if (data) console.log('Request Data:', data);
+  }
+};
+
+// Error handler wrapper
+const handleApiCall = async (apiCall, method, url, data = null) => {
+  try {
+    debugLog(method, url, data);
+    const response = await apiCall();
+    
+    if (DEBUG) {
+      console.log(`[Settings API] ${method} ${url} - Success:`, response.status);
+    }
+    
+    return response;
+  } catch (error) {
+    console.error(`[Settings API Error] ${method} ${url}:`, error.response?.data || error.message);
+    
+    // Enhanced error object with more details
+    const enhancedError = {
+      ...error,
+      userMessage: error.response?.data?.error || error.response?.data?.message || 'An error occurred. Please try again.',
+      statusCode: error.response?.status,
+      endpoint: url,
+      method: method
+    };
+    
+    throw enhancedError;
+  }
+};
+
+// Special handler for blob downloads
+const handleBlobDownload = async (apiCall, backupId) => {
+  try {
+    debugLog('GET', `/settings/backups/${backupId}/download (blob)`);
+    const response = await apiCall();
+    
+    // Check if response is valid blob
+    if (!response.data || response.data.size === 0) {
+      throw new Error('Downloaded file is empty');
+    }
+    
+    // Check if response is actually an error JSON (sometimes server returns error as JSON even with blob responseType)
+    if (response.data.type === 'application/json') {
+      const text = await response.data.text();
+      try {
+        const errorData = JSON.parse(text);
+        if (!errorData.success) {
+          throw new Error(errorData.error || 'Failed to download backup');
+        }
+      } catch (e) {
+        // Not JSON, proceed with download
+      }
+    }
+    
+    if (DEBUG) {
+      console.log(`[Settings API] Download backup - Success:`, response.status);
+      console.log(`[Settings API] File size: ${response.data.size} bytes`);
+    }
+    
+    return response;
+  } catch (error) {
+    console.error(`[Settings API Error] Download backup:`, error.response?.data || error.message);
+    
+    // Try to extract error message from blob if possible
+    let errorMessage = error.message || 'Failed to download backup';
+    if (error.response?.data instanceof Blob && error.response.data.type === 'application/json') {
+      try {
+        const text = await error.response.data.text();
+        const errorData = JSON.parse(text);
+        errorMessage = errorData.error || errorData.message || errorMessage;
+      } catch (e) {
+        // Ignore parsing error
+      }
+    } else if (error.response?.data?.error) {
+      errorMessage = error.response.data.error;
+    }
+    
+    const enhancedError = {
+      ...error,
+      userMessage: errorMessage,
+      statusCode: error.response?.status,
+      endpoint: `/settings/backups/${backupId}/download`,
+      method: 'GET'
+    };
+    
+    throw enhancedError;
+  }
+};
 
 export const settingsApi = {
   // ==================== GENERAL SETTINGS ====================
-  
-  /**
-   * Get all general settings
-   */
-  getGeneralSettings: () => {
-    return api.get('/settings/general');
+  getGeneralSettings: async () => {
+    return handleApiCall(
+      () => api.get('/settings/general'),
+      'GET',
+      '/settings/general'
+    );
   },
-  
-  /**
-   * Update general settings
-   * @param {Object} data - Settings data (companyName, logo, timezone, dateFormat, etc.)
-   */
-  updateGeneralSettings: (data) => {
-    return api.put('/settings/general', data);
+
+  updateGeneralSettings: async (data) => {
+    return handleApiCall(
+      () => api.put('/settings/general', data),
+      'PUT',
+      '/settings/general',
+      data
+    );
   },
-  
-  /**
-   * Upload company logo
-   * @param {File} file - Logo file
-   */
-  uploadLogo: (file) => {
-    const formData = new FormData();
-    formData.append('logo', file);
-    return api.post('/settings/upload-logo', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
-  },
-  
-  // ==================== SYSTEM SETTINGS ====================
-  
-  /**
-   * Get system settings
-   */
-  getSystemSettings: () => {
-    return api.get('/settings/system');
-  },
-  
-  /**
-   * Update system settings
-   * @param {Object} data - System settings (maintenanceMode, debugMode, etc.)
-   */
-  updateSystemSettings: (data) => {
-    return api.put('/settings/system', data);
-  },
-  
-  /**
-   * Toggle maintenance mode
-   * @param {boolean} enabled - Maintenance mode status
-   */
-  toggleMaintenanceMode: (enabled) => {
-    return api.post('/settings/maintenance-mode', { enabled });
-  },
-  
-  /**
-   * Clear system cache
-   */
-  clearCache: () => {
-    return api.post('/settings/clear-cache');
-  },
-  
-  // ==================== BACKUP & RESTORE ====================
-  
-  /**
-   * Get backup list
-   * @param {Object} params - Pagination params
-   */
-  getBackups: (params = { page: 1, limit: 20 }) => {
-    return api.get('/settings/backups', { params });
-  },
-  
-  /**
-   * Create new backup
-   * @param {Object} data - Backup options (includeDatabase, includeFiles, etc.)
-   */
-  createBackup: (data = {}) => {
-    return api.post('/settings/backups', data);
-  },
-  
-  /**
-   * Download backup file
-   * @param {string} backupId - Backup ID
-   */
-  downloadBackup: (backupId) => {
-    return api.get(`/settings/backups/${backupId}/download`, {
-      responseType: 'blob'
-    });
-  },
-  
-  /**
-   * Restore from backup
-   * @param {string} backupId - Backup ID
-   * @param {Object} options - Restore options
-   */
-  restoreBackup: (backupId, options = {}) => {
-    return api.post(`/settings/backups/${backupId}/restore`, options);
-  },
-  
-  /**
-   * Delete backup
-   * @param {string} backupId - Backup ID
-   */
-  deleteBackup: (backupId) => {
-    return api.delete(`/settings/backups/${backupId}`);
-  },
-  
-  // ==================== AUDIT LOGS ====================
-  
-  /**
-   * Get audit logs
-   * @param {Object} params - Filter and pagination params
-   */
-  getAuditLogs: (params = { page: 1, limit: 50, user: null, action: null, startDate: null, endDate: null }) => {
-    return api.get('/settings/audit-logs', { params });
-  },
-  
-  /**
-   * Get audit log by ID
-   * @param {string} logId - Log ID
-   */
-  getAuditLogById: (logId) => {
-    return api.get(`/settings/audit-logs/${logId}`);
-  },
-  
-  /**
-   * Export audit logs
-   * @param {Object} params - Filter params
-   * @param {string} format - Export format (csv, excel, pdf)
-   */
-  exportAuditLogs: (params, format = 'csv') => {
-    return api.get('/settings/audit-logs/export', {
-      params: { ...params, format },
-      responseType: 'blob'
-    });
-  },
-  
+
   // ==================== EMAIL SETTINGS ====================
-  
-  /**
-   * Get email settings
-   */
-  getEmailSettings: () => {
-    return api.get('/settings/email');
+  getEmailSettings: async () => {
+    return handleApiCall(
+      () => api.get('/settings/email'),
+      'GET',
+      '/settings/email'
+    );
   },
-  
-  /**
-   * Update email settings
-   * @param {Object} data - Email configuration
-   */
-  updateEmailSettings: (data) => {
-    return api.put('/settings/email', data);
+
+  updateEmailSettings: async (data) => {
+    // Remove masked password before sending
+    const cleanData = { ...data };
+    if (cleanData.smtp?.auth?.pass === '********') {
+      delete cleanData.smtp.auth.pass;
+    }
+    
+    return handleApiCall(
+      () => api.put('/settings/email', cleanData),
+      'PUT',
+      '/settings/email',
+      cleanData
+    );
   },
-  
-  /**
-   * Test email configuration
-   * @param {string} testEmail - Email address to send test email
-   */
-  testEmailConfig: (testEmail) => {
-    return api.post('/settings/email/test', { testEmail });
+
+  testEmailConfig: async (email) => {
+    if (!email) {
+      throw new Error('Email address is required');
+    }
+    
+    return handleApiCall(
+      () => api.post('/settings/test-email', { email }),
+      'POST',
+      '/settings/test-email',
+      { email }
+    );
   },
-  
+
   // ==================== NOTIFICATION SETTINGS ====================
-  
-  /**
-   * Get notification settings
-   * @param {string} userId - User ID (optional, defaults to current user)
-   */
-  getNotificationSettings: (userId = null) => {
-    const params = userId ? { userId } : {};
-    return api.get('/settings/notifications', { params });
+  getNotificationSettings: async () => {
+    return handleApiCall(
+      () => api.get('/settings/notifications'),
+      'GET',
+      '/settings/notifications'
+    );
   },
-  
-  /**
-   * Update notification settings
-   * @param {Object} data - Notification preferences
-   */
-  updateNotificationSettings: (data) => {
-    return api.put('/settings/notifications', data);
+
+  updateNotificationSettings: async (data) => {
+    return handleApiCall(
+      () => api.put('/settings/notifications', data),
+      'PUT',
+      '/settings/notifications',
+      data
+    );
   },
-  
-  // ==================== ROLE & PERMISSION SETTINGS ====================
-  
-  /**
-   * Get role settings
-   */
-  getRoleSettings: () => {
-    return api.get('/settings/roles');
-  },
-  
-  /**
-   * Update role settings
-   * @param {string} roleId - Role ID
-   * @param {Object} data - Role data
-   */
-  updateRoleSettings: (roleId, data) => {
-    return api.put(`/settings/roles/${roleId}`, data);
-  },
-  
+
   // ==================== INTEGRATION SETTINGS ====================
-  
-  /**
-   * Get integration settings
-   */
-  getIntegrationSettings: () => {
-    return api.get('/settings/integrations');
+  getIntegrationSettings: async () => {
+    return handleApiCall(
+      () => api.get('/settings/integrations'),
+      'GET',
+      '/settings/integrations'
+    );
   },
-  
-  /**
-   * Update integration settings
-   * @param {string} integration - Integration name (slack, teams, etc.)
-   * @param {Object} data - Integration configuration
-   */
-  updateIntegrationSettings: (integration, data) => {
-    return api.put(`/settings/integrations/${integration}`, data);
+
+  updateIntegrationSettings: async (data) => {
+    // Remove sensitive data from logs if needed
+    const safeData = { ...data };
+    if (safeData.slack?.webhookUrl) {
+      safeData.slack.webhookUrl = '[REDACTED]';
+    }
+    if (safeData.teams?.webhookUrl) {
+      safeData.teams.webhookUrl = '[REDACTED]';
+    }
+    
+    debugLog('PUT', '/settings/integrations (data redacted)', safeData);
+    
+    return handleApiCall(
+      () => api.put('/settings/integrations', data),
+      'PUT',
+      '/settings/integrations',
+      data
+    );
   },
-  
+
+  generateApiKey: async (data) => {
+    if (!data.name) {
+      throw new Error('API key name is required');
+    }
+    
+    return handleApiCall(
+      () => api.post('/settings/integrations/api-keys', data),
+      'POST',
+      '/settings/integrations/api-keys',
+      data
+    );
+  },
+
+  revokeApiKey: async (keyId) => {
+    if (!keyId) {
+      throw new Error('API key ID is required');
+    }
+    
+    return handleApiCall(
+      () => api.delete(`/settings/integrations/api-keys/${keyId}`),
+      'DELETE',
+      `/settings/integrations/api-keys/${keyId}`
+    );
+  },
+
   // ==================== THEME SETTINGS ====================
-  
-  /**
-   * Get theme settings
-   */
-  getThemeSettings: () => {
-    return api.get('/settings/theme');
+  getThemeSettings: async () => {
+    return handleApiCall(
+      () => api.get('/settings/theme'),
+      'GET',
+      '/settings/theme'
+    );
   },
-  
-  /**
-   * Update theme settings
-   * @param {Object} data - Theme configuration (primaryColor, darkMode, etc.)
-   */
-  updateThemeSettings: (data) => {
-    return api.put('/settings/theme', data);
+
+  updateThemeSettings: async (data) => {
+    return handleApiCall(
+      () => api.put('/settings/theme', data),
+      'PUT',
+      '/settings/theme',
+      data
+    );
   },
-  
-  // ==================== API KEY MANAGEMENT ====================
-  
-  /**
-   * Get API keys
-   */
-  getApiKeys: () => {
-    return api.get('/settings/api-keys');
+
+  // ==================== SYSTEM SETTINGS ====================
+  getSystemSettings: async () => {
+    return handleApiCall(
+      () => api.get('/settings/system'),
+      'GET',
+      '/settings/system'
+    );
   },
-  
-  /**
-   * Generate new API key
-   * @param {Object} data - Key details (name, permissions, expiresAt)
-   */
-  generateApiKey: (data) => {
-    return api.post('/settings/api-keys', data);
+
+  updateSystemSettings: async (data) => {
+    return handleApiCall(
+      () => api.put('/settings/system', data),
+      'PUT',
+      '/settings/system',
+      data
+    );
   },
-  
-  /**
-   * Revoke API key
-   * @param {string} keyId - API Key ID
-   */
-  revokeApiKey: (keyId) => {
-    return api.delete(`/settings/api-keys/${keyId}`);
+
+  testConnection: async (type, config) => {
+    if (!type) {
+      throw new Error('Connection type is required');
+    }
+    
+    return handleApiCall(
+      () => api.post('/settings/test-connection', { type, config }),
+      'POST',
+      '/settings/test-connection',
+      { type, config: config ? '[CONFIG PROVIDED]' : undefined }
+    );
   },
-  
-  // ==================== DATA IMPORT/EXPORT ====================
-  
-  /**
-   * Export all data
-   * @param {Object} options - Export options (modules, format)
-   */
-  exportAllData: (options = {}) => {
-    return api.post('/settings/export-data', options, {
-      responseType: 'blob'
-    });
+
+  // ==================== BACKUP SETTINGS ====================
+  getBackups: async () => {
+    return handleApiCall(
+      () => api.get('/settings/backups'),
+      'GET',
+      '/settings/backups'
+    );
   },
-  
-  /**
-   * Import data
-   * @param {File} file - Import file
-   * @param {Object} options - Import options
-   */
-  importData: (file, options = {}) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('options', JSON.stringify(options));
-    return api.post('/settings/import-data', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+
+  createBackup: async (data = {}) => {
+    return handleApiCall(
+      () => api.post('/settings/backups', data),
+      'POST',
+      '/settings/backups',
+      data
+    );
+  },
+
+  downloadBackup: async (backupId) => {
+    if (!backupId) {
+      throw new Error('Backup ID is required');
+    }
+    
+    return handleBlobDownload(
+      () => api.get(`/settings/backups/${backupId}/download`, {
+        responseType: 'blob',
+        timeout: 60000 // 60 second timeout for large files
+      }),
+      backupId
+    );
+  },
+
+  restoreBackup: async (backupId) => {
+    if (!backupId) {
+      throw new Error('Backup ID is required');
+    }
+    
+    return handleApiCall(
+      () => api.post(`/settings/backups/${backupId}/restore`),
+      'POST',
+      `/settings/backups/${backupId}/restore`
+    );
+  },
+
+  deleteBackup: async (backupId) => {
+    if (!backupId) {
+      throw new Error('Backup ID is required');
+    }
+    
+    return handleApiCall(
+      () => api.delete(`/settings/backups/${backupId}`),
+      'DELETE',
+      `/settings/backups/${backupId}`
+    );
   }
 };
+
+// Export a helper to check API health
+export const checkSettingsHealth = async () => {
+  try {
+    const response = await api.get('/settings/general');
+    return { success: true, message: 'Settings API is healthy' };
+  } catch (error) {
+    return { 
+      success: false, 
+      message: 'Settings API is not responding',
+      error: error.message 
+    };
+  }
+};
+
+export default settingsApi;

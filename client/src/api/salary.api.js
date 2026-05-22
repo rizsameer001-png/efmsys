@@ -4337,6 +4337,827 @@
 
 
 
+// // client/src/api/salary.api.js
+// import api from './axios.config';
+
+// export const salaryApi = {
+//   // ==================== EMPLOYEE SELF SERVICE ====================
+
+//   getMySalary: async (month, year) => {
+//     try {
+//       const params = {};
+//       if (month) params.month = month;
+//       if (year) params.year = year;
+//       const response = await api.get('/salary/my', { params });
+//       return {
+//         success: true,
+//         data: response.data?.data || response.data || {}
+//       };
+//     } catch (error) {
+//       console.error('Error fetching my salary:', error);
+//       return {
+//         success: false,
+//         data: null,
+//         error: error.response?.data?.message || error.message
+//       };
+//     }
+//   },
+
+//   getSalaryHistory: async (params = {}) => {
+//     try {
+//       const cleanParams = {};
+//       if (params.year) cleanParams.year = params.year;
+//       if (params.month) cleanParams.month = params.month;
+//       if (params.page) cleanParams.page = params.page;
+//       if (params.limit) cleanParams.limit = params.limit;
+      
+//       const response = await api.get('/salary/history', { params: cleanParams });
+//       return {
+//         success: true,
+//         data: response.data?.data || response.data || [],
+//         total: response.data?.total || 0,
+//         page: params.page || 1,
+//         limit: params.limit || 12
+//       };
+//     } catch (error) {
+//       console.error('Error fetching salary history:', error);
+//       const mockHistory = [];
+//       for (let i = 0; i < 6; i++) {
+//         const date = new Date();
+//         date.setMonth(date.getMonth() - i);
+//         mockHistory.push({
+//           id: `mock_${i}`,
+//           month: date.getMonth() + 1,
+//           year: date.getFullYear(),
+//           monthName: date.toLocaleString('default', { month: 'long' }),
+//           grossSalary: 7800,
+//           netSalary: 7800,
+//           status: i === 0 ? 'processed' : 'paid'
+//         });
+//       }
+//       return {
+//         success: false,
+//         data: mockHistory,
+//         total: mockHistory.length,
+//         error: error.response?.data?.message || error.message
+//       };
+//     }
+//   },
+
+//   getSalarySlipById: async (id) => {
+//     try {
+//       const response = await api.get(`/salary/slip/${id}`);
+//       return {
+//         success: true,
+//         data: response.data?.data || response.data
+//       };
+//     } catch (error) {
+//       console.error('Error fetching salary slip by ID:', error);
+//       const currentDate = new Date();
+//       return {
+//         success: false,
+//         data: {
+//           slipNumber: `SLIP-${currentDate.getFullYear()}${String(currentDate.getMonth() + 1).padStart(2, '0')}-001`,
+//           employeeId: 'EMP001',
+//           employeeName: 'Current User',
+//           designation: 'Technician',
+//           department: 'Operations',
+//           month: currentDate.getMonth() + 1,
+//           year: currentDate.getFullYear(),
+//           earnings: { basic: 5000, housingAllowance: 1250, transportAllowance: 800, medicalAllowance: 750, total: 7800 },
+//           deductions: { tax: 0, socialSecurity: 0, total: 0 },
+//           netSalary: 7800,
+//           status: 'processed'
+//         },
+//         error: error.response?.data?.message || error.message
+//       };
+//     }
+//   },
+
+//   getSalarySlip: async (year, month) => {
+//     try {
+//       const response = await api.get(`/salary/slip/${year}/${month}`);
+//       return {
+//         success: true,
+//         data: response.data?.data || response.data || {}
+//       };
+//     } catch (error) {
+//       console.error('Error fetching salary slip:', error);
+//       return {
+//         success: false,
+//         data: {
+//           slipNumber: `SLIP-${year}${String(month).padStart(2, '0')}-001`,
+//           employeeId: 'EMP001',
+//           employeeName: 'Current User',
+//           designation: 'Technician',
+//           department: 'Operations',
+//           month,
+//           year,
+//           earnings: { basic: 5000, housingAllowance: 1250, transportAllowance: 800, medicalAllowance: 750, total: 7800 },
+//           deductions: { tax: 0, socialSecurity: 0, total: 0 },
+//           netSalary: 7800,
+//           status: 'processed'
+//         },
+//         error: error.response?.data?.message || error.message
+//       };
+//     }
+//   },
+
+//   getMySalarySlips: async (year = null) => {
+//     try {
+//       const params = year ? { year } : {};
+//       const response = await api.get('/salary/my-slips', { params });
+//       return {
+//         success: true,
+//         data: response.data?.data || response.data || [],
+//         total: response.data?.total || 0
+//       };
+//     } catch (error) {
+//       console.error('Error fetching my salary slips:', error);
+//       return {
+//         success: false,
+//         data: [],
+//         total: 0,
+//         error: error.response?.data?.message || error.message
+//       };
+//     }
+//   },
+
+//   downloadSalarySlip: async (slipId, format = 'pdf') => {
+//     try {
+//       const response = await api.get(`/salary/slip/${slipId}/download`, {
+//         params: { format },
+//         responseType: 'blob'
+//       });
+//       return {
+//         success: true,
+//         blob: response.data,
+//         filename: `salary-slip-${slipId}.${format}`
+//       };
+//     } catch (error) {
+//       console.error('Error downloading salary slip:', error);
+//       return {
+//         success: false,
+//         error: error.response?.data?.message || error.message
+//       };
+//     }
+//   },
+
+//   emailSalarySlip: async (slipId) => {
+//     try {
+//       const response = await api.post(`/salary/slip/${slipId}/email`);
+//       return {
+//         success: true,
+//         message: response.data?.message || 'Salary slip sent to email'
+//       };
+//     } catch (error) {
+//       console.error('Error emailing salary slip:', error);
+//       return {
+//         success: false,
+//         error: error.response?.data?.message || error.message
+//       };
+//     }
+//   },
+
+//   getMySalarySummary: async (year) => {
+//     try {
+//       const response = await api.get('/salary/my-summary', { params: { year } });
+//       return {
+//         success: true,
+//         data: response.data?.data || response.data || {}
+//       };
+//     } catch (error) {
+//       console.error('Error fetching salary summary:', error);
+//       return {
+//         success: false,
+//         data: null,
+//         error: error.response?.data?.message || error.message
+//       };
+//     }
+//   },
+
+//   getMySalaryStructure: async () => {
+//     try {
+//       const response = await api.get('/salary/structure');
+//       return {
+//         success: true,
+//         data: response.data?.data || response.data || {}
+//       };
+//     } catch (error) {
+//       console.error('Error fetching salary structure:', error);
+//       return {
+//         success: false,
+//         data: null,
+//         error: error.response?.data?.message || error.message
+//       };
+//     }
+//   },
+
+//   getSalaryStructure: async (employeeId) => {
+//     try {
+//       let url = '/salary/structure';
+//       if (employeeId && employeeId !== 'undefined' && employeeId !== 'null') {
+//         url = `/salary/structure/${employeeId}`;
+//       }
+//       const response = await api.get(url);
+//       return {
+//         success: true,
+//         data: response.data?.data || response.data
+//       };
+//     } catch (error) {
+//       console.error('Error fetching salary structure:', error);
+//       return {
+//         success: false,
+//         data: {
+//           earnings: {
+//             basic: { amount: 5000, taxable: true },
+//             housingAllowance: { type: 'percentage', value: 25, taxable: true },
+//             transportAllowance: { type: 'fixed', value: 800, taxable: true },
+//             medicalAllowance: { amount: 750, taxable: false }
+//           },
+//           deductions: {
+//             incomeTax: { amount: 0 },
+//             socialSecurity: { amount: 0 }
+//           }
+//         },
+//         error: error.response?.data?.message || error.message
+//       };
+//     }
+//   },
+
+//   getEmployeesForSalary: async (month, year, department = '', country = '') => {
+//     try {
+//       const params = { month, year };
+//       if (department) params.department = department;
+//       if (country) params.country = country;
+//       const response = await api.get('/salary/employees', { params });
+//       return {
+//         success: true,
+//         data: response.data?.data || [],
+//         summary: response.data?.summary || {},
+//         total: response.data?.total || 0
+//       };
+//     } catch (error) {
+//       console.error('Error fetching employees for salary:', error);
+//       const mockEmployees = [
+//         { _id: '1', name: 'John Doe', firstName: 'John', lastName: 'Doe', employeeId: 'EMP001', department: 'Operations', designation: 'Senior Technician', country: 'UAE', hasSalaryStructure: true },
+//         { _id: '2', name: 'Jane Smith', firstName: 'Jane', lastName: 'Smith', employeeId: 'EMP002', department: 'Technical', designation: 'Technician', country: 'INDIA', hasSalaryStructure: false },
+//         { _id: '3', name: 'Mike Johnson', firstName: 'Mike', lastName: 'Johnson', employeeId: 'EMP003', department: 'Operations', designation: 'Supervisor', country: 'UAE', hasSalaryStructure: true },
+//       ];
+//       return {
+//         success: false,
+//         data: mockEmployees,
+//         summary: { total: mockEmployees.length, withSalaryStructure: 2, processed: 1 },
+//         error: error.response?.data?.message || error.message
+//       };
+//     }
+//   },
+
+//   // ==================== PAYROLL EMPLOYEES (ADDED MISSING METHOD) ====================
+
+//   /**
+//    * Get employees for payroll processing (Admin/HR only)
+//    * @param {number} month - Month (1-12)
+//    * @param {number} year - Year
+//    * @param {string} department - Department filter
+//    * @param {string} country - Country filter
+//    * @returns {Promise} - { success: boolean, data: Array, summary: Object }
+//    */
+//   getEmployeesForPayroll: async (month, year, department = '', country = '') => {
+//     try {
+//       const params = { month, year };
+//       if (department) params.department = department;
+//       if (country) params.country = country;
+//       const response = await api.get('/salary/employees', { params });
+//       return {
+//         success: true,
+//         data: response.data?.data || [],
+//         summary: response.data?.summary || {},
+//         total: response.data?.total || 0
+//       };
+//     } catch (error) {
+//       console.error('Error fetching employees for payroll:', error);
+//       // Return mock data on error
+//       const mockEmployees = [
+//         { _id: '1', name: 'John Doe', firstName: 'John', lastName: 'Doe', employeeId: 'EMP001', department: 'Operations', designation: 'Senior Technician', country: 'UAE', hasSalaryStructure: true, hasPayrollProcessed: false, netSalary: 6500, status: 'draft' },
+//         { _id: '2', name: 'Jane Smith', firstName: 'Jane', lastName: 'Smith', employeeId: 'EMP002', department: 'Technical', designation: 'Technician', country: 'INDIA', hasSalaryStructure: true, hasPayrollProcessed: false, netSalary: 7900, status: 'draft' },
+//         { _id: '3', name: 'Mike Johnson', firstName: 'Mike', lastName: 'Johnson', employeeId: 'EMP003', department: 'Operations', designation: 'Supervisor', country: 'UAE', hasSalaryStructure: false, hasPayrollProcessed: false, netSalary: 0, status: 'draft' },
+//         { _id: '4', name: 'Sarah Williams', firstName: 'Sarah', lastName: 'Williams', employeeId: 'EMP004', department: 'Technical', designation: 'Senior Technician', country: 'USA', hasSalaryStructure: true, hasPayrollProcessed: false, netSalary: 8500, status: 'draft' },
+//       ];
+//       return {
+//         success: false,
+//         data: mockEmployees,
+//         summary: { total: mockEmployees.length, withSalaryStructure: 3, processed: 0 },
+//         error: error.response?.data?.message || error.message
+//       };
+//     }
+//   },
+
+//   getTeamSalary: async (month, year, department = null) => {
+//     try {
+//       const params = { month, year };
+//       if (department) params.department = department;
+//       const response = await api.get('/salary/team', { params });
+//       return {
+//         success: true,
+//         data: response.data?.data || response.data || [],
+//         total: response.data?.total || 0
+//       };
+//     } catch (error) {
+//       console.error('Error fetching team salary:', error);
+//       return {
+//         success: false,
+//         data: [],
+//         total: 0,
+//         error: error.response?.data?.message || error.message
+//       };
+//     }
+//   },
+
+//   getAllSalaries: async (month, year, department = null, building = null, page = 1, limit = 50) => {
+//     try {
+//       const params = { month, year, page, limit };
+//       if (department) params.department = department;
+//       if (building) params.building = building;
+//       const response = await api.get('/salary/all', { params });
+//       return {
+//         success: true,
+//         data: response.data?.data || response.data || [],
+//         total: response.data?.total || 0,
+//         page,
+//         limit,
+//         pages: Math.ceil((response.data?.total || 0) / limit)
+//       };
+//     } catch (error) {
+//       console.error('Error fetching all salaries:', error);
+//       return {
+//         success: false,
+//         data: [],
+//         total: 0,
+//         error: error.response?.data?.message || error.message
+//       };
+//     }
+//   },
+
+//   getEmployeeSalary: async (employeeId, month, year) => {
+//     try {
+//       const response = await api.get(`/salary/employee/${employeeId}`, { params: { month, year } });
+//       return {
+//         success: true,
+//         data: response.data?.data || response.data || {}
+//       };
+//     } catch (error) {
+//       console.error('Error fetching employee salary:', error);
+//       return {
+//         success: false,
+//         data: null,
+//         error: error.response?.data?.message || error.message
+//       };
+//     }
+//   },
+
+//   updateSalaryStructure: async (employeeId, data) => {
+//     try {
+//       const response = await api.put(`/salary/structure/${employeeId}`, data);
+//       return {
+//         success: true,
+//         data: response.data?.data || response.data || {},
+//         message: response.data?.message || 'Salary structure updated successfully'
+//       };
+//     } catch (error) {
+//       console.error('Error updating salary structure:', error);
+//       return {
+//         success: false,
+//         error: error.response?.data?.message || error.message
+//       };
+//     }
+//   },
+
+//   bulkUpdateSalaryStructures: async (employees) => {
+//     try {
+//       const response = await api.post('/salary/bulk-update', { employees });
+//       return {
+//         success: true,
+//         data: response.data?.data || response.data || {},
+//         message: response.data?.message || 'Bulk update completed'
+//       };
+//     } catch (error) {
+//       console.error('Error in bulk update:', error);
+//       return {
+//         success: false,
+//         error: error.response?.data?.message || error.message
+//       };
+//     }
+//   },
+
+//   // ==================== PAYROLL DASHBOARD & PROCESSING ====================
+
+//   getPayrollDashboard: async (month, year) => {
+//     try {
+//       const response = await api.get('/salary/payroll/dashboard', { params: { month, year } });
+//       return {
+//         success: true,
+//         data: response.data?.data || response.data || {}
+//       };
+//     } catch (error) {
+//       console.error('Error fetching payroll dashboard:', error);
+//       return {
+//         success: false,
+//         data: {
+//           summary: {
+//             totalEmployees: 45,
+//             totalPayroll: 351000,
+//             averageSalary: 7800,
+//             processedCount: 38,
+//             pendingCount: 7,
+//             paidCount: 35,
+//             complianceRate: 94
+//           },
+//           departmentWise: [
+//             { department: 'Operations', totalPayroll: 117000, employeeCount: 15 },
+//             { department: 'Technical', totalPayroll: 156000, employeeCount: 20 },
+//             { department: 'Housekeeping', totalPayroll: 78000, employeeCount: 10 }
+//           ],
+//           recentPayrolls: [
+//             { id: '1', month, year, employeeCount: 45, totalPayroll: 351000, status: 'processed', processedBy: 'Admin' }
+//           ]
+//         },
+//         error: error.response?.data?.message || error.message
+//       };
+//     }
+//   },
+
+//   getPayrollSummary: async (month, year) => {
+//     try {
+//       const response = await api.get('/salary/payroll/summary', { params: { month, year } });
+//       return {
+//         success: true,
+//         data: response.data?.data || response.data || {}
+//       };
+//     } catch (error) {
+//       console.error('Error fetching payroll summary:', error);
+//       return {
+//         success: false,
+//         data: null,
+//         error: error.response?.data?.message || error.message
+//       };
+//     }
+//   },
+
+//   getPayrollStatistics: async (year) => {
+//     try {
+//       const response = await api.get('/salary/payroll/statistics', { params: { year } });
+//       return {
+//         success: true,
+//         data: response.data?.data || response.data || {}
+//       };
+//     } catch (error) {
+//       console.error('Error fetching payroll statistics:', error);
+//       const monthlyData = [];
+//       for (let month = 1; month <= 12; month++) {
+//         monthlyData.push({
+//           month: month,
+//           total: 300000 + (month * 5000),
+//           employeeCount: 42 + Math.floor(month / 3)
+//         });
+//       }
+//       return {
+//         success: false,
+//         data: {
+//           year: year,
+//           monthlyData: monthlyData,
+//           totalPayroll: 3930000,
+//           averageSalary: 7278,
+//           maxTotal: 360000
+//         },
+//         error: error.response?.data?.message || error.message
+//       };
+//     }
+//   },
+
+//   getPayrollReport: async (month, year, reportType = 'summary') => {
+//     try {
+//       const response = await api.get('/salary/payroll/report', { params: { month, year, reportType } });
+//       return {
+//         success: true,
+//         data: response.data?.data || response.data || {}
+//       };
+//     } catch (error) {
+//       console.error('Error fetching payroll report:', error);
+//       return {
+//         success: false,
+//         data: null,
+//         error: error.response?.data?.message || error.message
+//       };
+//     }
+//   },
+
+//   exportPayrollReport: async (month, year, format = 'csv') => {
+//     try {
+//       const response = await api.get('/salary/payroll/export', {
+//         params: { month, year, format },
+//         responseType: format === 'csv' ? 'blob' : 'json'
+//       });
+//       return {
+//         success: true,
+//         data: response.data
+//       };
+//     } catch (error) {
+//       console.error('Error exporting payroll report:', error);
+//       const mockCSV = `Month,Year,Employee Name,Basic Salary,Allowances,Deductions,Net Salary\n${month},${year},Sample Employee,5000,2800,0,7800`;
+//       const blob = new Blob([mockCSV], { type: 'text/csv' });
+//       return {
+//         success: false,
+//         data: blob,
+//         error: error.response?.data?.message || error.message
+//       };
+//     }
+//   },
+
+//   previewPayroll: async (employeeIds, month, year) => {
+//     try {
+//       const response = await api.post('/salary/payroll/preview', { employeeIds, month, year });
+//       return {
+//         success: true,
+//         data: response.data?.data || { previews: [], totals: {} }
+//       };
+//     } catch (error) {
+//       console.error('Error previewing payroll:', error);
+//       return {
+//         success: false,
+//         data: { previews: [], totals: {} },
+//         error: error.response?.data?.message || error.message
+//       };
+//     }
+//   },
+
+//   processPayroll: async (month, year, options = {}) => {
+//     try {
+//       let employeeIds = options.employeeIds || [];
+      
+//       if (!employeeIds || (Array.isArray(employeeIds) && employeeIds.length === 0)) {
+//         try {
+//           const employeesResponse = await salaryApi.getEmployeesForPayroll(month, year);
+//           if (employeesResponse.success && employeesResponse.data && employeesResponse.data.length > 0) {
+//             employeeIds = employeesResponse.data.map(emp => emp._id);
+//           } else {
+//             employeeIds = ['1', '2', '3', '4', '5'];
+//           }
+//         } catch (err) {
+//           console.warn('Could not fetch employees, using mock data');
+//           employeeIds = ['1', '2', '3', '4', '5'];
+//         }
+//       }
+      
+//       let validEmployeeIds = [];
+//       if (Array.isArray(employeeIds)) {
+//         validEmployeeIds = employeeIds.map(id => String(id));
+//       } else if (typeof employeeIds === 'string') {
+//         validEmployeeIds = employeeIds.split(',').map(id => id.trim());
+//       } else if (typeof employeeIds === 'object' && employeeIds !== null) {
+//         validEmployeeIds = [String(employeeIds._id || employeeIds.id || employeeIds)];
+//       }
+      
+//       validEmployeeIds = validEmployeeIds.filter(id => id && id !== 'undefined' && id !== 'null');
+      
+//       if (validEmployeeIds.length === 0) {
+//         return {
+//           success: false,
+//           error: 'No employees selected for payroll processing',
+//           data: { processedCount: 0 }
+//         };
+//       }
+      
+//       console.log(`Processing payroll for ${validEmployeeIds.length} employees`);
+      
+//       const response = await api.post('/salary/payroll/process', { 
+//         employeeIds: validEmployeeIds, 
+//         month: parseInt(month), 
+//         year: parseInt(year),
+//         processedBy: options.processedBy || null
+//       });
+      
+//       return {
+//         success: true,
+//         data: response.data?.data || { processedCount: validEmployeeIds.length },
+//         message: response.data?.message || `Payroll processed for ${validEmployeeIds.length} employees`
+//       };
+//     } catch (error) {
+//       console.error('Error processing payroll:', error);
+//       return {
+//         success: false,
+//         error: error.response?.data?.message || error.message,
+//         data: { processedCount: 0 }
+//       };
+//     }
+//   },
+
+//   processSelectedPayroll: async (month, year, employeeIds) => {
+//     try {
+//       let validEmployeeIds = [];
+//       if (Array.isArray(employeeIds)) {
+//         validEmployeeIds = employeeIds.map(id => String(id));
+//       } else if (typeof employeeIds === 'string') {
+//         validEmployeeIds = employeeIds.split(',').map(id => id.trim());
+//       } else if (typeof employeeIds === 'object' && employeeIds !== null) {
+//         validEmployeeIds = [String(employeeIds._id || employeeIds.id || employeeIds)];
+//       }
+      
+//       validEmployeeIds = validEmployeeIds.filter(id => id && id !== 'undefined' && id !== 'null');
+      
+//       if (validEmployeeIds.length === 0) {
+//         return {
+//           success: false,
+//           error: 'No employees selected for payroll processing'
+//         };
+//       }
+      
+//       const response = await api.post('/salary/payroll/process-selected', { 
+//         employeeIds: validEmployeeIds, 
+//         month: parseInt(month), 
+//         year: parseInt(year) 
+//       });
+//       return {
+//         success: true,
+//         data: response.data?.data || {},
+//         message: response.data?.message || `Payroll processed for ${validEmployeeIds.length} employees`
+//       };
+//     } catch (error) {
+//       console.error('Error processing selected payroll:', error);
+//       return {
+//         success: false,
+//         error: error.response?.data?.message || error.message
+//       };
+//     }
+//   },
+
+//   approvePayroll: async (month, year, notes = '') => {
+//     try {
+//       const response = await api.post('/salary/payroll/approve', { month: parseInt(month), year: parseInt(year), notes });
+//       return {
+//         success: true,
+//         message: response.data?.message || 'Payroll approved successfully'
+//       };
+//     } catch (error) {
+//       console.error('Error approving payroll:', error);
+//       return {
+//         success: false,
+//         error: error.response?.data?.message || error.message
+//       };
+//     }
+//   },
+
+//   rejectPayroll: async (month, year, reason = '') => {
+//     try {
+//       const response = await api.post('/salary/payroll/reject', { month: parseInt(month), year: parseInt(year), reason });
+//       return {
+//         success: true,
+//         message: response.data?.message || 'Payroll rejected successfully'
+//       };
+//     } catch (error) {
+//       console.error('Error rejecting payroll:', error);
+//       return {
+//         success: false,
+//         error: error.response?.data?.message || error.message
+//       };
+//     }
+//   },
+
+//   getPayrollSettings: async () => {
+//     try {
+//       const response = await api.get('/salary/payroll/settings');
+//       return {
+//         success: true,
+//         data: response.data?.data || {}
+//       };
+//     } catch (error) {
+//       console.error('Error fetching payroll settings:', error);
+//       return {
+//         success: false,
+//         data: {
+//           general: { payrollCycle: 'monthly', payrollDay: 25, currency: 'AED', autoProcess: false },
+//           overtime: { enabled: true, weekdayMultiplier: 1.5, weekendMultiplier: 2, holidayMultiplier: 2.5, maxHoursPerWeek: 20 },
+//           deductions: { taxEnabled: false, socialSecurityEnabled: false, pensionEnabled: false }
+//         },
+//         error: error.response?.data?.message || error.message
+//       };
+//     }
+//   },
+
+//   updatePayrollSettings: async (settings) => {
+//     try {
+//       const response = await api.put('/salary/payroll/settings', settings);
+//       return {
+//         success: true,
+//         data: response.data?.data,
+//         message: response.data?.message || 'Settings updated successfully'
+//       };
+//     } catch (error) {
+//       console.error('Error updating payroll settings:', error);
+//       return {
+//         success: false,
+//         error: error.response?.data?.message || error.message
+//       };
+//     }
+//   },
+
+//   resetPayrollSettings: async () => {
+//     try {
+//       const response = await api.post('/salary/payroll/settings/reset');
+//       return {
+//         success: true,
+//         data: response.data?.data || {},
+//         message: response.data?.message || 'Settings reset to default'
+//       };
+//     } catch (error) {
+//       console.error('Error resetting payroll settings:', error);
+//       return {
+//         success: false,
+//         error: error.response?.data?.message || error.message
+//       };
+//     }
+//   },
+
+//   testBankConnection: async (bankDetails) => {
+//     try {
+//       const response = await api.post('/salary/payroll/bank/test', bankDetails);
+//       return {
+//         success: true,
+//         message: response.data?.message || 'Bank connection successful'
+//       };
+//     } catch (error) {
+//       console.error('Error testing bank connection:', error);
+//       return {
+//         success: false,
+//         error: error.response?.data?.message || error.message
+//       };
+//     }
+//   },
+
+//   // ==================== HELPER / UTILITY METHODS ====================
+
+//   generateMockSalaryData: () => {
+//     const currentDate = new Date();
+//     const currentMonth = currentDate.getMonth() + 1;
+//     const currentYear = currentDate.getFullYear();
+    
+//     const currentSalary = {
+//       employeeId: 'EMP001',
+//       employeeName: 'Current User',
+//       month: currentMonth,
+//       year: currentYear,
+//       basicSalary: 50000,
+//       allowances: {
+//         hra: 15000,
+//         conveyance: 2000,
+//         medical: 1250,
+//         special: 5000,
+//         lta: 3000,
+//         bonus: 5000
+//       },
+//       deductions: {
+//         pf: 1800,
+//         professionalTax: 200,
+//         tds: 2500,
+//         loan: 0,
+//         otherDeductions: 0
+//       },
+//       grossEarnings: 81250,
+//       totalDeductions: 4500,
+//       netSalary: 76750,
+//       status: 'processed',
+//       processedDate: new Date(currentYear, currentMonth - 1, 28).toISOString()
+//     };
+    
+//     const history = [];
+//     for (let i = 5; i >= 0; i--) {
+//       const date = new Date();
+//       date.setMonth(date.getMonth() - i);
+//       const month = date.getMonth() + 1;
+//       const year = date.getFullYear();
+      
+//       history.push({
+//         id: `salary_${year}_${month}`,
+//         month,
+//         year,
+//         monthName: date.toLocaleString('default', { month: 'long' }),
+//         grossEarnings: Math.floor(Math.random() * (85000 - 75000 + 1) + 75000),
+//         netSalary: Math.floor(Math.random() * (80000 - 70000 + 1) + 70000),
+//         status: ['processed', 'pending', 'processing'][Math.floor(Math.random() * 3)],
+//         processedDate: new Date(year, month - 1, 28).toISOString()
+//       });
+//     }
+    
+//     return { current: currentSalary, history };
+//   }
+// };
+
+// export default salaryApi;
+
+
+
+
+
 // client/src/api/salary.api.js
 import api from './axios.config';
 
@@ -4637,7 +5458,6 @@ export const salaryApi = {
       };
     } catch (error) {
       console.error('Error fetching employees for payroll:', error);
-      // Return mock data on error
       const mockEmployees = [
         { _id: '1', name: 'John Doe', firstName: 'John', lastName: 'Doe', employeeId: 'EMP001', department: 'Operations', designation: 'Senior Technician', country: 'UAE', hasSalaryStructure: true, hasPayrollProcessed: false, netSalary: 6500, status: 'draft' },
         { _id: '2', name: 'Jane Smith', firstName: 'Jane', lastName: 'Smith', employeeId: 'EMP002', department: 'Technical', designation: 'Technician', country: 'INDIA', hasSalaryStructure: true, hasPayrollProcessed: false, netSalary: 7900, status: 'draft' },
@@ -4835,44 +5655,90 @@ export const salaryApi = {
     }
   },
 
-  getPayrollReport: async (month, year, reportType = 'summary') => {
+  // ==================== 🔴 FIXED: PAYROLL REPORT METHODS ====================
+
+  /**
+   * 🔴 FIX: Get Payroll Report - This method was using incorrect endpoint
+   * @param {Object} params - Report parameters
+   * @param {number} params.month - Month (1-12)
+   * @param {number} params.year - Year
+   * @param {string} params.department - Department filter
+   * @param {string} params.reportType - Report type (payroll_summary, department_payroll, salary_comparison, tax_report, bank_transfer)
+   * @returns {Promise} - Payroll report data
+   */
+  getPayrollReport: async (params = {}) => {
     try {
-      const response = await api.get('/salary/payroll/report', { params: { month, year, reportType } });
+      console.log('🔴 [FIXED] Fetching payroll report with params:', params);
+      const response = await api.get('/reports/financial', { params });
       return {
         success: true,
         data: response.data?.data || response.data || {}
       };
     } catch (error) {
       console.error('Error fetching payroll report:', error);
+      // Return mock data on error for graceful degradation
+      const currentDate = new Date();
+      const month = params.month || currentDate.getMonth() + 1;
+      const year = params.year || currentDate.getFullYear();
       return {
         success: false,
-        data: null,
+        data: {
+          summary: {
+            totalPayroll: 351000,
+            averageSalary: 7800,
+            totalEmployees: 45,
+            totalDeductions: 15750
+          },
+          records: [
+            { employeeName: 'John Doe', basicSalary: 5000, allowances: 2800, overtime: 500, deductions: 400, netSalary: 7900 },
+            { employeeName: 'Jane Smith', basicSalary: 5500, allowances: 3000, overtime: 300, deductions: 450, netSalary: 8350 },
+            { employeeName: 'Mike Johnson', basicSalary: 4800, allowances: 2500, overtime: 200, deductions: 380, netSalary: 7120 }
+          ]
+        },
         error: error.response?.data?.message || error.message
       };
     }
   },
 
-  exportPayrollReport: async (month, year, format = 'csv') => {
+  /**
+   * 🔴 FIX: Export Payroll Report - This method was using incorrect endpoint
+   * @param {Object} params - Export parameters
+   * @param {number} params.month - Month (1-12)
+   * @param {number} params.year - Year
+   * @param {string} params.department - Department filter
+   * @param {string} params.reportType - Report type
+   * @param {string} params.format - Export format (csv, excel, pdf)
+   * @returns {Promise} - Blob response for download
+   */
+  exportPayrollReport: async (params = {}) => {
     try {
-      const response = await api.get('/salary/payroll/export', {
-        params: { month, year, format },
-        responseType: format === 'csv' ? 'blob' : 'json'
+      console.log('🔴 [FIXED] Exporting payroll report with params:', params);
+      const response = await api.get('/reports/financial/export', {
+        params,
+        responseType: 'blob'
       });
       return {
         success: true,
-        data: response.data
+        blob: response.data,
+        filename: `payroll_report_${params.month}_${params.year}.${params.format || 'csv'}`
       };
     } catch (error) {
       console.error('Error exporting payroll report:', error);
+      // Create a mock CSV fallback
+      const month = params.month || new Date().getMonth() + 1;
+      const year = params.year || new Date().getFullYear();
       const mockCSV = `Month,Year,Employee Name,Basic Salary,Allowances,Deductions,Net Salary\n${month},${year},Sample Employee,5000,2800,0,7800`;
       const blob = new Blob([mockCSV], { type: 'text/csv' });
       return {
         success: false,
-        data: blob,
+        blob: blob,
+        filename: `payroll_report_${month}_${year}.csv`,
         error: error.response?.data?.message || error.message
       };
     }
   },
+
+  // ==================== EXISTING PAYROLL METHODS (Preserved) ====================
 
   previewPayroll: async (employeeIds, month, year) => {
     try {
