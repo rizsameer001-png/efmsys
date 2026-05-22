@@ -4,7 +4,7 @@
  */
 
 const Complaint = require('../models/complaint.model');
-const User = require('../models/user.model');
+const User = require('../models/User.model');
 const Building = require('../models/building.model');
 const Unit = require('../models/unit.model');
 

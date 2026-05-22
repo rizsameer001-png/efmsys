@@ -3,7 +3,7 @@
  * Handles auto-assignment, skill matching, and workload balancing
  */
 
-const User = require('../models/user.model');
+const User = require('../models/User.model');
 const Task = require('../models/task.model');
 const TaskAssignment = require('../models/task-assignment.model');
 

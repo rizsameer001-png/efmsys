@@ -1,7 +1,7 @@
 // server/src/services/auth.service.js
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const User = require('../models/user.model');
+const User = require('../models/User.model');
 
 class AuthService {
   // Generate JWT Tokens

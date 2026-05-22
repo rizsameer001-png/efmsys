@@ -1,5 +1,5 @@
 // server/src/middleware/permission.middleware.js
-const User = require('../models/user.model');
+const User = require('../models/User.model');
 const Role = require('../models/role.model');
 
 const permissionMiddleware = (requiredPermission) => {
