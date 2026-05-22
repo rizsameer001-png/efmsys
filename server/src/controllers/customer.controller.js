@@ -4,9 +4,9 @@
  * Features: Registration, Login, Unit verification, Profile management
  */
 
-const Customer = require('../models/customer.model');
-const Unit = require('../models/unit.model');
-const Building = require('../models/building.model');
+const Customer = require('../models/Customer.model');
+const Unit = require('../models/Unit.model');
+const Building = require('../models/Building.model');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 

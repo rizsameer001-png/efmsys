@@ -3,9 +3,9 @@
  * Handles all complaint-related operations
  */
 
-const Complaint = require('../models/complaint.model');
+const Complaint = require('../models/Complaint.model');
 const User = require('../models/User.model');
-const Building = require('../models/building.model');
+const Building = require('../models/Building.model');
 const Unit = require('../models/unit.model');
 
 // ==================== CREATE COMPLAINT ====================

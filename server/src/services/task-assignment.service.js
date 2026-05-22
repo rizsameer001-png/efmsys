@@ -4,7 +4,7 @@
  */
 
 const User = require('../models/User.model');
-const Task = require('../models/task.model');
+const Task = require('../models/Task.model');
 const TaskAssignment = require('../models/task-assignment.model');
 
 class TaskAssignmentService {
