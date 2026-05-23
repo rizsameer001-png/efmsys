@@ -1,3 +1,6 @@
+
+//server/src/config/socketio.js
+
 // const socketIO = require('socket.io');
 // const jwt = require('jsonwebtoken');
 // const { logger } = require('../utils/logger');
@@ -873,18 +876,1454 @@
 
 
 
-// server/src/config/socketio.js
+// // server/src/config/socketio.js
+// const socketIO = require('socket.io');
+// const jwt = require('jsonwebtoken');
+// const { logger } = require('../utils/logger');
+
+// let io;
+// let connectedUsers = new Map(); // userId -> { socketId, socket, userInfo }
+
+// /**
+//  * Initialize Socket.IO with the HTTP server
+//  * @param {Object} server - HTTP server instance
+//  * @returns {Object} Socket.IO instance
+//  */
+// const initSocket = (server) => {
+//   console.log('🚀 Initializing Socket.IO server...');
+  
+//   io = socketIO(server, {
+//     cors: {
+//       origin: process.env.CLIENT_URL || 'http://localhost:3000',
+//       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+//       credentials: true,
+//       allowedHeaders: ['Content-Type', 'Authorization']
+//     },
+//     transports: ['polling', 'websocket'], // Polling first, then upgrade to websocket
+//     pingTimeout: 60000,
+//     pingInterval: 25000,
+//     allowEIO3: true,
+//     path: '/socket.io',
+//     connectTimeout: 45000,
+//     maxHttpBufferSize: 1e6
+//   });
+
+//   // Debug: Log all socket events
+//   io.engine.on('connection_error', (err) => {
+//     console.error('❌ Socket engine connection error:', err);
+//   });
+
+//   // Authentication middleware with better error handling
+//   io.use(async (socket, next) => {
+//     console.log('🔐 Socket authentication attempt...');
+    
+//     try {
+//       const token = socket.handshake.auth.token;
+      
+//       if (!token) {
+//         console.error('❌ Socket authentication failed: No token provided');
+//         return next(new Error('Authentication error: No token provided'));
+//       }
+
+//       console.log(`📝 Token received: ${token.substring(0, 20)}...`);
+      
+//       const decoded = jwt.verify(token, process.env.JWT_SECRET);
+//       socket.userId = decoded.userId || decoded.id;
+//       socket.userRole = decoded.role;
+//       socket.userEmail = decoded.email;
+//       socket.userName = decoded.name || `${decoded.firstName} ${decoded.lastName}`;
+      
+//       console.log(`✅ Socket authenticated: User ${socket.userId} (${socket.userRole})`);
+//       next();
+//     } catch (error) {
+//       console.error('❌ Socket authentication error:', error.message);
+//       next(new Error(`Authentication error: ${error.message}`));
+//     }
+//   });
+
+//   // Connection handler with detailed logging
+//   io.on('connection', async (socket) => {
+//     const connectionTime = new Date();
+//     console.log(`\n🔌 [${connectionTime.toISOString()}] New client connected:`);
+//     console.log(`   Socket ID: ${socket.id}`);
+//     console.log(`   User ID: ${socket.userId}`);
+//     console.log(`   User Role: ${socket.userRole}`);
+//     console.log(`   User Name: ${socket.userName}`);
+//     console.log(`   Transport: ${socket.conn.transport.name}`);
+
+//     // Store user connection info
+//     connectedUsers.set(socket.userId, {
+//       socketId: socket.id,
+//       socket: socket,
+//       userId: socket.userId,
+//       role: socket.userRole,
+//       email: socket.userEmail,
+//       name: socket.userName,
+//       connectedAt: connectionTime,
+//       lastActivity: new Date(),
+//       ip: socket.handshake.address
+//     });
+
+//     console.log(`📊 Total connected users: ${connectedUsers.size}`);
+
+//     // Update user online status in database
+//     try {
+//       const User = require('../models/User.model');
+//       const updatedUser = await User.findByIdAndUpdate(socket.userId, {
+//         isUserOnline: true,
+//         lastSeen: new Date(),
+//         socketId: socket.id
+//       }, { new: true });
+      
+//       if (updatedUser) {
+//         console.log(`✅ User ${socket.userId} online status updated in database`);
+//       } else {
+//         console.warn(`⚠️ User ${socket.userId} not found in database`);
+//       }
+//     } catch (error) {
+//       console.error('❌ Error updating user online status:', error.message);
+//     }
+
+//     // Join user-specific room
+//     if (socket.userId) {
+//       socket.join(`user_${socket.userId}`);
+//       console.log(`📱 User ${socket.userId} joined personal room: user_${socket.userId}`);
+//     }
+
+//     // Join role-specific room
+//     if (socket.userRole) {
+//       socket.join(`role_${socket.userRole}`);
+//       console.log(`👥 User ${socket.userId} joined role room: role_${socket.userRole}`);
+//     }
+
+//     // Broadcast user online status to all connected clients
+//     const onlineEvent = {
+//       userId: socket.userId,
+//       userName: socket.userName,
+//       userRole: socket.userRole,
+//       status: 'online',
+//       timestamp: new Date()
+//     };
+//     io.emit('user_status_change', onlineEvent);
+//     console.log(`📡 Broadcasted online status for user ${socket.userId}`);
+
+//     // Send current online users list to the newly connected user
+//     const onlineUsersList = Array.from(connectedUsers.values())
+//       .filter(u => u.userId !== socket.userId)
+//       .map(u => ({
+//         userId: u.userId,
+//         userName: u.name,
+//         userRole: u.role,
+//         connectedAt: u.connectedAt,
+//         lastActivity: u.lastActivity
+//       }));
+    
+//     socket.emit('online_users', onlineUsersList);
+//     console.log(`📋 Sent online users list to ${socket.userId} (${onlineUsersList.length} users)`);
+
+//     // ==================== CHAT EVENT HANDLERS ====================
+
+//     // Join chat room
+//     socket.on('join_chat', (chatId) => {
+//       socket.join(`chat_${chatId}`);
+//       console.log(`💬 [${new Date().toISOString()}] User ${socket.userId} joined chat room: ${chatId}`);
+      
+//       // Notify other users in chat that user joined
+//       socket.to(`chat_${chatId}`).emit('user_joined_chat', {
+//         userId: socket.userId,
+//         userName: socket.userName,
+//         chatId: chatId,
+//         timestamp: new Date()
+//       });
+//     });
+
+//     // Leave chat room
+//     socket.on('leave_chat', (chatId) => {
+//       socket.leave(`chat_${chatId}`);
+//       console.log(`💬 [${new Date().toISOString()}] User ${socket.userId} left chat room: ${chatId}`);
+      
+//       socket.to(`chat_${chatId}`).emit('user_left_chat', {
+//         userId: socket.userId,
+//         userName: socket.userName,
+//         chatId: chatId,
+//         timestamp: new Date()
+//       });
+//     });
+
+//     // Send new message with detailed logging
+//     socket.on('new_message', (data) => {
+//       const { chatId, message } = data;
+//       console.log(`💬 [${new Date().toISOString()}] New message:`);
+//       console.log(`   Chat ID: ${chatId}`);
+//       console.log(`   From: ${socket.userId} (${socket.userName})`);
+//       console.log(`   Message: ${message?.substring(0, 50)}${message?.length > 50 ? '...' : ''}`);
+      
+//       // Broadcast to all users in the chat room
+//       io.to(`chat_${chatId}`).emit('new_message', {
+//         chatId: chatId,
+//         message: message,
+//         senderId: socket.userId,
+//         senderName: socket.userName,
+//         senderRole: socket.userRole,
+//         timestamp: new Date()
+//       });
+//     });
+
+//     // Typing indicator start
+//     socket.on('typing_start', (data) => {
+//       const { chatId, userName } = data;
+//       console.log(`⌨️ User ${socket.userId} started typing in chat ${chatId}`);
+//       socket.to(`chat_${chatId}`).emit('user_typing', {
+//         userId: socket.userId,
+//         userName: userName || socket.userName,
+//         chatId: chatId,
+//         isTyping: true,
+//         timestamp: new Date()
+//       });
+//     });
+
+//     // Typing indicator stop
+//     socket.on('typing_stop', (data) => {
+//       const { chatId, userName } = data;
+//       console.log(`⌨️ User ${socket.userId} stopped typing in chat ${chatId}`);
+//       socket.to(`chat_${chatId}`).emit('user_typing', {
+//         userId: socket.userId,
+//         userName: userName || socket.userName,
+//         chatId: chatId,
+//         isTyping: false,
+//         timestamp: new Date()
+//       });
+//     });
+
+//     // Message read receipt
+//     socket.on('message_read', (data) => {
+//       const { messageId, chatId } = data;
+//       console.log(`👁️ User ${socket.userId} read message ${messageId} in chat ${chatId}`);
+//       io.to(`chat_${chatId}`).emit('message_read', {
+//         messageId: messageId,
+//         chatId: chatId,
+//         userId: socket.userId,
+//         userName: socket.userName,
+//         readAt: new Date()
+//       });
+//     });
+
+//     // Message delivered receipt
+//     socket.on('message_delivered', (data) => {
+//       const { messageId, chatId } = data;
+//       console.log(`📬 Message ${messageId} delivered to user ${socket.userId}`);
+//       io.to(`chat_${chatId}`).emit('message_delivered', {
+//         messageId: messageId,
+//         chatId: chatId,
+//         userId: socket.userId,
+//         deliveredAt: new Date()
+//       });
+//     });
+
+//     // ==================== TASK EVENT HANDLERS ====================
+
+//     socket.on('join_task_room', (taskId) => {
+//       socket.join(`task_${taskId}`);
+//       console.log(`📋 User ${socket.userId} joined task room: ${taskId}`);
+//     });
+
+//     socket.on('leave_task_room', (taskId) => {
+//       socket.leave(`task_${taskId}`);
+//       console.log(`📋 User ${socket.userId} left task room: ${taskId}`);
+//     });
+
+//     socket.on('task_update', (data) => {
+//       const { taskId, status, progress, notes } = data;
+//       console.log(`📋 Task update: ${taskId} -> ${status} (${progress}%)`);
+//       io.to(`task_${taskId}`).emit('task_updated', {
+//         taskId,
+//         status,
+//         progress,
+//         notes,
+//         updatedBy: socket.userId,
+//         updatedByName: socket.userName,
+//         updatedAt: new Date()
+//       });
+//     });
+
+//     socket.on('task_completed', (data) => {
+//       const { taskId, completedAt, evidence } = data;
+//       console.log(`✅ Task completed: ${taskId} by ${socket.userName}`);
+//       io.to(`task_${taskId}`).emit('task_completed_event', {
+//         taskId,
+//         completedAt,
+//         evidence,
+//         completedBy: socket.userId,
+//         completedByName: socket.userName,
+//         timestamp: new Date()
+//       });
+//     });
+
+//     socket.on('task_verified', (data) => {
+//       const { taskId, verified, notes, rating } = data;
+//       console.log(`🔍 Task verified: ${taskId} -> ${verified ? 'Approved' : 'Rejected'}`);
+//       io.to(`task_${taskId}`).emit('task_verified_event', {
+//         taskId,
+//         verified,
+//         notes,
+//         rating,
+//         verifiedBy: socket.userId,
+//         verifiedByName: socket.userName,
+//         timestamp: new Date()
+//       });
+//     });
+
+//     // ==================== COMPLAINT EVENT HANDLERS ====================
+
+//     socket.on('join_complaint_room', (complaintId) => {
+//       socket.join(`complaint_${complaintId}`);
+//       console.log(`⚠️ User ${socket.userId} joined complaint room: ${complaintId}`);
+//     });
+
+//     socket.on('join_building_room', (buildingId) => {
+//       socket.join(`building_${buildingId}`);
+//       console.log(`🏢 User ${socket.userId} joined building room: ${buildingId}`);
+//     });
+
+//     socket.on('complaint_update', (data) => {
+//       const { complaintId, status, notes } = data;
+//       console.log(`⚠️ Complaint update: ${complaintId} -> ${status}`);
+//       io.to(`complaint_${complaintId}`).emit('complaint_updated', {
+//         complaintId,
+//         status,
+//         notes,
+//         updatedBy: socket.userId,
+//         updatedByName: socket.userName,
+//         updatedAt: new Date()
+//       });
+//     });
+
+//     // ==================== NOTIFICATION EVENT HANDLERS ====================
+
+//     socket.on('notification_read', (notificationId) => {
+//       console.log(`🔔 User ${socket.userId} read notification ${notificationId}`);
+//       io.to(`user_${socket.userId}`).emit('notification_read_confirmation', {
+//         notificationId,
+//         readAt: new Date()
+//       });
+//     });
+
+//     socket.on('mark_all_notifications_read', () => {
+//       console.log(`🔔 User ${socket.userId} marked all notifications as read`);
+//       io.to(`user_${socket.userId}`).emit('all_notifications_read', {
+//         userId: socket.userId,
+//         markedAt: new Date()
+//       });
+//     });
+
+//     // ==================== HEALTH CHECK ====================
+
+//     socket.on('ping', (callback) => {
+//       const user = connectedUsers.get(socket.userId);
+//       if (user) {
+//         user.lastActivity = new Date();
+//         connectedUsers.set(socket.userId, user);
+//       }
+      
+//       if (typeof callback === 'function') {
+//         callback({ pong: true, timestamp: new Date() });
+//       }
+//     });
+
+//     // Track transport upgrade
+//     socket.on('upgrade', (transport) => {
+//       console.log(`🔧 Socket ${socket.id} upgraded to ${transport}`);
+//     });
+
+//     // ==================== DISCONNECT HANDLER ====================
+
+//     socket.on('disconnect', async (reason) => {
+//       const disconnectTime = new Date();
+//       console.log(`\n🔌 [${disconnectTime.toISOString()}] Client disconnected:`);
+//       console.log(`   Socket ID: ${socket.id}`);
+//       console.log(`   User ID: ${socket.userId}`);
+//       console.log(`   Reason: ${reason}`);
+      
+//       // Remove from connected users map
+//       if (socket.userId) {
+//         connectedUsers.delete(socket.userId);
+//         console.log(`📊 Total connected users: ${connectedUsers.size}`);
+        
+//         // Update user offline status in database
+//         try {
+//           const User = require('../models/User.model');
+//           const updatedUser = await User.findByIdAndUpdate(socket.userId, {
+//             isUserOnline: false,
+//             lastSeen: new Date(),
+//             socketId: null
+//           }, { new: true });
+          
+//           if (updatedUser) {
+//             console.log(`✅ User ${socket.userId} offline status updated in database`);
+//           }
+//         } catch (error) {
+//           console.error('❌ Error updating user offline status:', error.message);
+//         }
+        
+//         // Broadcast user offline status
+//         io.emit('user_status_change', {
+//           userId: socket.userId,
+//           userName: socket.userName,
+//           userRole: socket.userRole,
+//           status: 'offline',
+//           lastSeen: new Date(),
+//           timestamp: new Date()
+//         });
+//         console.log(`📡 Broadcasted offline status for user ${socket.userId}`);
+//       }
+//     });
+
+//     // Error handler
+//     socket.on('error', (error) => {
+//       console.error(`❌ Socket error for user ${socket.userId}:`, error);
+//     });
+//   });
+
+//   // Log server start
+//   console.log('✅ Socket.IO server initialized successfully');
+//   console.log(`   Transport: polling + websocket upgrade`);
+//   console.log(`   Path: /socket.io`);
+  
+//   return io;
+// };
+
+// /**
+//  * Get Socket.IO instance
+//  * @returns {Object} Socket.IO instance
+//  */
+// const getIO = () => {
+//   if (!io) {
+//     throw new Error('Socket.io not initialized! Call initSocket first.');
+//   }
+//   return io;
+// };
+
+// /**
+//  * Get online users count
+//  * @returns {number}
+//  */
+// const getOnlineUsersCount = () => {
+//   return connectedUsers.size;
+// };
+
+// /**
+//  * Get online users list
+//  * @returns {Array}
+//  */
+// const getOnlineUsers = () => {
+//   return Array.from(connectedUsers.values()).map(u => ({
+//     userId: u.userId,
+//     userName: u.name,
+//     userRole: u.role,
+//     connectedAt: u.connectedAt,
+//     lastActivity: u.lastActivity
+//   }));
+// };
+
+// /**
+//  * Check if user is online
+//  * @param {string} userId - User ID to check
+//  * @returns {boolean}
+//  */
+// const isUserOnline = (userId) => {
+//   return connectedUsers.has(userId);
+// };
+
+// /**
+//  * Get user socket ID
+//  * @param {string} userId - User ID
+//  * @returns {string|null}
+//  */
+// const getUserSocketId = (userId) => {
+//   const user = connectedUsers.get(userId);
+//   return user ? user.socketId : null;
+// };
+
+// /**
+//  * Send notification to specific user
+//  * @param {string} userId - User ID
+//  * @param {Object} notification - Notification data
+//  * @returns {boolean}
+//  */
+// const sendToUser = (userId, notification) => {
+//   if (!io) return false;
+//   io.to(`user_${userId}`).emit('notification', notification);
+//   console.log(`📨 Sent notification to user ${userId}`);
+//   return true;
+// };
+
+// /**
+//  * Send message to specific user
+//  * @param {string} userId - User ID
+//  * @param {Object} message - Message data
+//  * @returns {boolean}
+//  */
+// const sendMessageToUser = (userId, message) => {
+//   if (!io) return false;
+//   io.to(`user_${userId}`).emit('direct_message', message);
+//   console.log(`💬 Sent direct message to user ${userId}`);
+//   return true;
+// };
+
+// /**
+//  * Send notification to role group
+//  * @param {string} role - User role
+//  * @param {Object} notification - Notification data
+//  * @returns {boolean}
+//  */
+// const sendToRole = (role, notification) => {
+//   if (!io) return false;
+//   io.to(`role_${role}`).emit('notification', notification);
+//   console.log(`📨 Sent notification to role ${role}`);
+//   return true;
+// };
+
+// /**
+//  * Send notification to multiple roles
+//  * @param {Array} roles - Array of role names
+//  * @param {Object} notification - Notification data
+//  * @returns {boolean}
+//  */
+// const sendToRoles = (roles, notification) => {
+//   if (!io) return false;
+//   roles.forEach(role => {
+//     io.to(`role_${role}`).emit('notification', notification);
+//   });
+//   console.log(`📨 Sent notification to roles: ${roles.join(', ')}`);
+//   return true;
+// };
+
+// /**
+//  * Send notification to building
+//  * @param {string} buildingId - Building ID
+//  * @param {Object} notification - Notification data
+//  * @returns {boolean}
+//  */
+// const sendToBuilding = (buildingId, notification) => {
+//   if (!io) return false;
+//   io.to(`building_${buildingId}`).emit('notification', notification);
+//   console.log(`🏢 Sent notification to building ${buildingId}`);
+//   return true;
+// };
+
+// /**
+//  * Send task update to all task followers
+//  * @param {string} taskId - Task ID
+//  * @param {Object} update - Update data
+//  * @returns {boolean}
+//  */
+// const sendTaskUpdate = (taskId, update) => {
+//   if (!io) return false;
+//   io.to(`task_${taskId}`).emit('task_update', update);
+//   console.log(`📋 Sent task update for task ${taskId}`);
+//   return true;
+// };
+
+// /**
+//  * Send complaint update to all complaint followers
+//  * @param {string} complaintId - Complaint ID
+//  * @param {Object} update - Update data
+//  * @returns {boolean}
+//  */
+// const sendComplaintUpdate = (complaintId, update) => {
+//   if (!io) return false;
+//   io.to(`complaint_${complaintId}`).emit('complaint_update', update);
+//   console.log(`⚠️ Sent complaint update for complaint ${complaintId}`);
+//   return true;
+// };
+
+// /**
+//  * Send message to chat room
+//  * @param {string} chatId - Chat ID
+//  * @param {Object} message - Message data
+//  * @returns {boolean}
+//  */
+// const sendToChatRoom = (chatId, message) => {
+//   if (!io) return false;
+//   io.to(`chat_${chatId}`).emit('chat_message', message);
+//   console.log(`💬 Sent message to chat room ${chatId}`);
+//   return true;
+// };
+
+// /**
+//  * Broadcast to all connected clients
+//  * @param {string} event - Event name
+//  * @param {Object} data - Event data
+//  * @returns {boolean}
+//  */
+// const broadcast = (event, data) => {
+//   if (!io) return false;
+//   io.emit(event, data);
+//   console.log(`📡 Broadcasted event ${event} to all clients`);
+//   return true;
+// };
+
+// /**
+//  * Get user connection info
+//  * @param {string} userId - User ID
+//  * @returns {Object|null}
+//  */
+// const getUserConnectionInfo = (userId) => {
+//   return connectedUsers.get(userId) || null;
+// };
+
+// /**
+//  * Update user activity
+//  * @param {string} userId - User ID
+//  */
+// const updateUserActivity = (userId) => {
+//   const user = connectedUsers.get(userId);
+//   if (user) {
+//     user.lastActivity = new Date();
+//     connectedUsers.set(userId, user);
+//   }
+// };
+
+// // Export all functions
+// module.exports = {
+//   initSocket,
+//   getIO,
+//   getOnlineUsersCount,
+//   getOnlineUsers,
+//   isUserOnline,
+//   getUserSocketId,
+//   sendToUser,
+//   sendMessageToUser,
+//   sendToRole,
+//   sendToRoles,
+//   sendToBuilding,
+//   sendTaskUpdate,
+//   sendComplaintUpdate,
+//   sendToChatRoom,
+//   broadcast,
+//   getUserConnectionInfo,
+//   updateUserActivity
+// };
+
+
+
+
+
+
+
+
+
+/**
+ * Socket.IO Configuration and Event Handlers
+ * 
+ * This module manages real-time WebSocket communication for the FMS Enterprise system.
+ * 
+ * HOW IT WORKS:
+ * 1. When server starts, Socket.IO initializes and listens for connections
+ * 2. Clients (browsers) connect via WebSocket with authentication token
+ * 3. Each connection is authenticated and assigned to user-specific rooms
+ * 4. Events are broadcast to appropriate rooms for real-time updates
+ * 
+ * COMMUNICATION FLOW:
+ * 
+ * Client A (User 1)          Socket.IO Server          Client B (User 2)
+ *      |                           |                           |
+ *      |--- connect(token) ------->|                           |
+ *      |                           |--- authenticate token --->|
+ *      |                           |<-- verified --------------|
+ *      |<-- connected -------------|                           |
+ *      |                           |                           |
+ *      |--- send message --------->|                           |
+ *      |                           |--- broadcast message ---->|
+ *      |                           |                           |
+ *      |<-- message delivered -----|--- message received ----->|
+ *      |                           |                           |
+ * 
+ * ROOM STRUCTURE:
+ * - user_{userId}: Private room for each user (for direct messages)
+ * - role_{role}: All users with specific role (e.g., role_admin)
+ * - chat_{chatId}: All participants in a specific chat
+ * - task_{taskId}: All users following a task
+ * - complaint_{complaintId}: All users following a complaint
+ * - building_{buildingId}: All users associated with a building
+ */
+
+// const socketIO = require('socket.io');
+// const jwt = require('jsonwebtoken');
+// const { logger } = require('../utils/logger');
+
+// let io;
+// let connectedUsers = new Map(); // userId -> { socketId, socket, userInfo, connectedAt, lastActivity }
+
+// /**
+//  * Initialize Socket.IO with the HTTP server
+//  * @param {Object} server - HTTP server instance
+//  * @returns {Object} Socket.IO instance
+//  * 
+//  * CONFIGURATION EXPLANATION:
+//  * - cors: Allows cross-origin requests from frontend
+//  * - transports: ['polling', 'websocket'] - Starts with HTTP polling, upgrades to WebSocket
+//  * - pingTimeout: How long to wait for pong response before disconnecting
+//  * - pingInterval: How often to send ping/pong to keep connection alive
+//  * - path: The URL path for socket connections
+//  * - connectTimeout: Maximum time allowed for connection establishment
+//  * - maxHttpBufferSize: Maximum message size (1MB)
+//  */
+// const initSocket = (server) => {
+//   console.log('🚀 Initializing Socket.IO server...');
+  
+//   io = socketIO(server, {
+//     cors: {
+//       origin: process.env.CLIENT_URL || 'http://localhost:3000',
+//       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+//       credentials: true,
+//       allowedHeaders: ['Content-Type', 'Authorization']
+//     },
+//     transports: ['polling', 'websocket'], // Start with polling, upgrade to WebSocket
+//     pingTimeout: 60000,      // 60 seconds - Wait 60s for pong before considering connection dead
+//     pingInterval: 25000,     // 25 seconds - Send ping every 25s to keep connection alive
+//     allowEIO3: true,         // Allow Engine.IO version 3 clients
+//     path: '/socket.io',      // Default socket.io path
+//     connectTimeout: 45000,   // 45 seconds - Timeout for initial connection
+//     maxHttpBufferSize: 1e6   // 1 MB - Maximum message size
+//   });
+
+//   // Debug: Log socket engine errors
+//   io.engine.on('connection_error', (err) => {
+//     console.error('❌ Socket engine connection error:', err);
+//   });
+
+//   // ==================== AUTHENTICATION MIDDLEWARE ====================
+//   /**
+//    * AUTHENTICATION FLOW:
+//    * 1. Client sends token in handshake auth
+//    * 2. Server verifies JWT token
+//    * 3. If valid, attaches user info to socket
+//    * 4. If invalid, rejects connection
+//    */
+//   io.use(async (socket, next) => {
+//     console.log('🔐 Socket authentication attempt...');
+    
+//     try {
+//       const token = socket.handshake.auth.token;
+      
+//       if (!token) {
+//         console.error('❌ Socket authentication failed: No token provided');
+//         return next(new Error('Authentication error: No token provided'));
+//       }
+
+//       console.log(`📝 Token received: ${token.substring(0, 20)}...`);
+      
+//       // Verify JWT token
+//       const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      
+//       // Attach user information to socket for later use
+//       socket.userId = decoded.userId || decoded.id;
+//       socket.userRole = decoded.role;
+//       socket.userEmail = decoded.email;
+//       socket.userName = decoded.name || `${decoded.firstName} ${decoded.lastName}`;
+//       socket.userDepartment = decoded.department;
+      
+//       console.log(`✅ Socket authenticated: User ${socket.userId} (${socket.userRole})`);
+//       next();
+//     } catch (error) {
+//       console.error('❌ Socket authentication error:', error.message);
+//       next(new Error(`Authentication error: ${error.message}`));
+//     }
+//   });
+
+//   // ==================== CONNECTION HANDLER ====================
+//   /**
+//    * CONNECTION PROCESS:
+//    * 1. Authenticated socket connects
+//    * 2. Store connection info in connectedUsers Map
+//    * 3. Update database with online status
+//    * 4. Join user-specific and role-specific rooms
+//    * 5. Broadcast online status to all clients
+//    * 6. Send list of online users to new client
+//    */
+//   io.on('connection', async (socket) => {
+//     const connectionTime = new Date();
+//     console.log(`\n🔌 [${connectionTime.toISOString()}] New client connected:`);
+//     console.log(`   Socket ID: ${socket.id}`);
+//     console.log(`   User ID: ${socket.userId}`);
+//     console.log(`   User Role: ${socket.userRole}`);
+//     console.log(`   User Name: ${socket.userName}`);
+//     console.log(`   Transport: ${socket.conn.transport.name}`);
+
+//     // ==================== STORE CONNECTION INFO ====================
+//     connectedUsers.set(socket.userId, {
+//       socketId: socket.id,
+//       socket: socket,
+//       userId: socket.userId,
+//       role: socket.userRole,
+//       email: socket.userEmail,
+//       name: socket.userName,
+//       department: socket.userDepartment,
+//       connectedAt: connectionTime,
+//       lastActivity: new Date(),
+//       ip: socket.handshake.address
+//     });
+
+//     console.log(`📊 Total connected users: ${connectedUsers.size}`);
+
+//     // ==================== UPDATE DATABASE ====================
+//     try {
+//       const User = require('../models/User.model');
+//       const updatedUser = await User.findByIdAndUpdate(socket.userId, {
+//         isOnline: true,
+//         lastSeen: new Date(),
+//         socketId: socket.id
+//       }, { new: true });
+      
+//       if (updatedUser) {
+//         console.log(`✅ User ${socket.userId} online status updated in database`);
+//       } else {
+//         console.warn(`⚠️ User ${socket.userId} not found in database`);
+//       }
+//     } catch (error) {
+//       console.error('❌ Error updating user online status:', error.message);
+//     }
+
+//     // ==================== JOIN ROOMS ====================
+//     // Join user-specific private room (for direct messages)
+//     if (socket.userId) {
+//       socket.join(`user_${socket.userId}`);
+//       console.log(`📱 User ${socket.userId} joined personal room: user_${socket.userId}`);
+//     }
+
+//     // Join role-specific room (for role-based broadcasts)
+//     if (socket.userRole) {
+//       socket.join(`role_${socket.userRole}`);
+//       console.log(`👥 User ${socket.userId} joined role room: role_${socket.userRole}`);
+//     }
+
+//     // ==================== BROADCAST ONLINE STATUS ====================
+//     const onlineEvent = {
+//       userId: socket.userId,
+//       userName: socket.userName,
+//       userRole: socket.userRole,
+//       status: 'online',
+//       timestamp: new Date()
+//     };
+//     io.emit('user_status_change', onlineEvent);
+//     console.log(`📡 Broadcasted online status for user ${socket.userId}`);
+
+//     // ==================== SEND ONLINE USERS LIST ====================
+//     const onlineUsersList = Array.from(connectedUsers.values())
+//       .filter(u => u.userId !== socket.userId)
+//       .map(u => ({
+//         userId: u.userId,
+//         userName: u.name,
+//         userRole: u.role,
+//         userEmail: u.email,
+//         connectedAt: u.connectedAt,
+//         lastActivity: u.lastActivity
+//       }));
+    
+//     socket.emit('online_users', onlineUsersList);
+//     console.log(`📋 Sent online users list to ${socket.userId} (${onlineUsersList.length} users)`);
+
+//     // ==================== EVENT HANDLERS ====================
+
+//     // ==================== CHAT EVENT HANDLERS ====================
+//     /**
+//      * CHAT COMMUNICATION FLOW:
+//      * 1. User joins a chat room: join_chat
+//      * 2. User sends message: new_message
+//      * 3. Server broadcasts to all users in the chat room
+//      * 4. Users receive message in real-time
+//      * 5. Typing indicators show when someone is typing
+//      * 6. Read receipts confirm message delivery
+//      */
+
+//     // Join chat room
+//     socket.on('join_chat', (chatId) => {
+//       socket.join(`chat_${chatId}`);
+//       console.log(`💬 [${new Date().toISOString()}] User ${socket.userId} joined chat room: ${chatId}`);
+      
+//       // Notify other users in chat that user joined
+//       socket.to(`chat_${chatId}`).emit('user_joined_chat', {
+//         userId: socket.userId,
+//         userName: socket.userName,
+//         chatId: chatId,
+//         timestamp: new Date()
+//       });
+//     });
+
+//     // Leave chat room
+//     socket.on('leave_chat', (chatId) => {
+//       socket.leave(`chat_${chatId}`);
+//       console.log(`💬 [${new Date().toISOString()}] User ${socket.userId} left chat room: ${chatId}`);
+      
+//       socket.to(`chat_${chatId}`).emit('user_left_chat', {
+//         userId: socket.userId,
+//         userName: socket.userName,
+//         chatId: chatId,
+//         timestamp: new Date()
+//       });
+//     });
+
+//     // Send new message with detailed logging
+//     socket.on('new_message', (data) => {
+//       const { chatId, message, to } = data;
+//       console.log(`💬 [${new Date().toISOString()}] New message:`);
+//       console.log(`   Chat ID: ${chatId}`);
+//       console.log(`   From: ${socket.userId} (${socket.userName})`);
+//       console.log(`   To: ${to || 'All in chat'}`);
+//       console.log(`   Message: ${message?.substring(0, 50)}${message?.length > 50 ? '...' : ''}`);
+      
+//       const messageData = {
+//         chatId: chatId,
+//         message: message,
+//         senderId: socket.userId,
+//         senderName: socket.userName,
+//         senderRole: socket.userRole,
+//         timestamp: new Date()
+//       };
+      
+//       // Send to chat room (all participants)
+//       io.to(`chat_${chatId}`).emit('new_message', messageData);
+      
+//       // If specific recipient specified, also send to their personal room
+//       if (to && to !== socket.userId) {
+//         io.to(`user_${to}`).emit('new_message', messageData);
+//       }
+//     });
+
+//     // Typing indicator start
+//     socket.on('typing_start', (data) => {
+//       const { chatId, to, userName } = data;
+//       console.log(`⌨️ User ${socket.userId} started typing in chat ${chatId}`);
+      
+//       const typingData = {
+//         userId: socket.userId,
+//         userName: userName || socket.userName,
+//         chatId: chatId,
+//         isTyping: true,
+//         timestamp: new Date()
+//       };
+      
+//       // Send to chat room
+//       socket.to(`chat_${chatId}`).emit('user_typing', typingData);
+      
+//       // Send directly to specific user if provided
+//       if (to && to !== socket.userId) {
+//         io.to(`user_${to}`).emit('user_typing', typingData);
+//       }
+//     });
+
+//     // Typing indicator stop
+//     socket.on('typing_stop', (data) => {
+//       const { chatId, to, userName } = data;
+//       console.log(`⌨️ User ${socket.userId} stopped typing in chat ${chatId}`);
+      
+//       const typingData = {
+//         userId: socket.userId,
+//         userName: userName || socket.userName,
+//         chatId: chatId,
+//         isTyping: false,
+//         timestamp: new Date()
+//       };
+      
+//       socket.to(`chat_${chatId}`).emit('user_typing', typingData);
+      
+//       if (to && to !== socket.userId) {
+//         io.to(`user_${to}`).emit('user_typing', typingData);
+//       }
+//     });
+
+//     // Message read receipt
+//     socket.on('message_read', (data) => {
+//       const { messageId, chatId, to } = data;
+//       console.log(`👁️ User ${socket.userId} read message ${messageId} in chat ${chatId}`);
+      
+//       const readReceipt = {
+//         messageId: messageId,
+//         chatId: chatId,
+//         userId: socket.userId,
+//         userName: socket.userName,
+//         readAt: new Date()
+//       };
+      
+//       io.to(`chat_${chatId}`).emit('message_read', readReceipt);
+      
+//       if (to) {
+//         io.to(`user_${to}`).emit('message_read', readReceipt);
+//       }
+//     });
+
+//     // Message delivered receipt
+//     socket.on('message_delivered', (data) => {
+//       const { messageId, chatId, to } = data;
+//       console.log(`📬 Message ${messageId} delivered to user ${socket.userId}`);
+      
+//       const deliveredReceipt = {
+//         messageId: messageId,
+//         chatId: chatId,
+//         userId: socket.userId,
+//         deliveredAt: new Date()
+//       };
+      
+//       io.to(`chat_${chatId}`).emit('message_delivered', deliveredReceipt);
+      
+//       if (to) {
+//         io.to(`user_${to}`).emit('message_delivered', deliveredReceipt);
+//       }
+//     });
+
+//     // Mark entire chat as read
+//     socket.on('mark_chat_read', (data) => {
+//       const { chatId } = data;
+//       console.log(`✅ User ${socket.userId} marked chat ${chatId} as read`);
+      
+//       io.to(`chat_${chatId}`).emit('chat_read', {
+//         chatId: chatId,
+//         userId: socket.userId,
+//         readAt: new Date()
+//       });
+//     });
+
+//     // ==================== TASK EVENT HANDLERS ====================
+//     /**
+//      * TASK REAL-TIME UPDATES:
+//      * - Join task room to receive updates
+//      * - Receive notifications when task status changes
+//      * - Get live progress updates
+//      * - Receive verification confirmations
+//      */
+
+//     socket.on('join_task_room', (taskId) => {
+//       socket.join(`task_${taskId}`);
+//       console.log(`📋 User ${socket.userId} joined task room: ${taskId}`);
+//     });
+
+//     socket.on('leave_task_room', (taskId) => {
+//       socket.leave(`task_${taskId}`);
+//       console.log(`📋 User ${socket.userId} left task room: ${taskId}`);
+//     });
+
+//     socket.on('task_update', (data) => {
+//       const { taskId, status, progress, notes } = data;
+//       console.log(`📋 Task update: ${taskId} -> ${status} (${progress}%)`);
+      
+//       io.to(`task_${taskId}`).emit('task_updated', {
+//         taskId,
+//         status,
+//         progress,
+//         notes,
+//         updatedBy: socket.userId,
+//         updatedByName: socket.userName,
+//         updatedAt: new Date()
+//       });
+//     });
+
+//     socket.on('task_completed', (data) => {
+//       const { taskId, completedAt, evidence } = data;
+//       console.log(`✅ Task completed: ${taskId} by ${socket.userName}`);
+      
+//       io.to(`task_${taskId}`).emit('task_completed_event', {
+//         taskId,
+//         completedAt,
+//         evidence,
+//         completedBy: socket.userId,
+//         completedByName: socket.userName,
+//         timestamp: new Date()
+//       });
+//     });
+
+//     socket.on('task_verified', (data) => {
+//       const { taskId, verified, notes, rating } = data;
+//       console.log(`🔍 Task verified: ${taskId} -> ${verified ? 'Approved' : 'Rejected'}`);
+      
+//       io.to(`task_${taskId}`).emit('task_verified_event', {
+//         taskId,
+//         verified,
+//         notes,
+//         rating,
+//         verifiedBy: socket.userId,
+//         verifiedByName: socket.userName,
+//         timestamp: new Date()
+//       });
+//     });
+
+//     // ==================== COMPLAINT EVENT HANDLERS ====================
+
+//     socket.on('join_complaint_room', (complaintId) => {
+//       socket.join(`complaint_${complaintId}`);
+//       console.log(`⚠️ User ${socket.userId} joined complaint room: ${complaintId}`);
+//     });
+
+//     socket.on('join_building_room', (buildingId) => {
+//       socket.join(`building_${buildingId}`);
+//       console.log(`🏢 User ${socket.userId} joined building room: ${buildingId}`);
+//     });
+
+//     socket.on('complaint_update', (data) => {
+//       const { complaintId, status, notes } = data;
+//       console.log(`⚠️ Complaint update: ${complaintId} -> ${status}`);
+      
+//       io.to(`complaint_${complaintId}`).emit('complaint_updated', {
+//         complaintId,
+//         status,
+//         notes,
+//         updatedBy: socket.userId,
+//         updatedByName: socket.userName,
+//         updatedAt: new Date()
+//       });
+//     });
+
+//     // ==================== NOTIFICATION EVENT HANDLERS ====================
+
+//     socket.on('notification_read', (notificationId) => {
+//       console.log(`🔔 User ${socket.userId} read notification ${notificationId}`);
+      
+//       io.to(`user_${socket.userId}`).emit('notification_read_confirmation', {
+//         notificationId,
+//         readAt: new Date()
+//       });
+//     });
+
+//     socket.on('mark_all_notifications_read', () => {
+//       console.log(`🔔 User ${socket.userId} marked all notifications as read`);
+      
+//       io.to(`user_${socket.userId}`).emit('all_notifications_read', {
+//         userId: socket.userId,
+//         markedAt: new Date()
+//       });
+//     });
+
+//     // ==================== HEALTH CHECK ====================
+
+//     socket.on('ping', (callback) => {
+//       const user = connectedUsers.get(socket.userId);
+//       if (user) {
+//         user.lastActivity = new Date();
+//         connectedUsers.set(socket.userId, user);
+//       }
+      
+//       if (typeof callback === 'function') {
+//         callback({ pong: true, timestamp: new Date(), userId: socket.userId });
+//       }
+//     });
+
+//     // Track transport upgrade (polling -> websocket)
+//     socket.on('upgrade', (transport) => {
+//       console.log(`🔧 Socket ${socket.id} upgraded to ${transport}`);
+//     });
+
+//     // ==================== DISCONNECT HANDLER ====================
+//     /**
+//      * DISCONNECT PROCESS:
+//      * 1. Socket disconnects
+//      * 2. Remove from connectedUsers Map
+//      * 3. Update database with offline status
+//      * 4. Broadcast offline status to all clients
+//      */
+//     socket.on('disconnect', async (reason) => {
+//       const disconnectTime = new Date();
+//       console.log(`\n🔌 [${disconnectTime.toISOString()}] Client disconnected:`);
+//       console.log(`   Socket ID: ${socket.id}`);
+//       console.log(`   User ID: ${socket.userId}`);
+//       console.log(`   Reason: ${reason}`);
+//       console.log(`   Transport: ${socket.conn.transport.name}`);
+      
+//       // Remove from connected users map
+//       if (socket.userId) {
+//         connectedUsers.delete(socket.userId);
+//         console.log(`📊 Total connected users: ${connectedUsers.size}`);
+        
+//         // Update user offline status in database
+//         try {
+//           const User = require('../models/User.model');
+//           const updatedUser = await User.findByIdAndUpdate(socket.userId, {
+//             isOnline: false,
+//             lastSeen: new Date(),
+//             socketId: null
+//           }, { new: true });
+          
+//           if (updatedUser) {
+//             console.log(`✅ User ${socket.userId} offline status updated in database`);
+//           }
+//         } catch (error) {
+//           console.error('❌ Error updating user offline status:', error.message);
+//         }
+        
+//         // Broadcast user offline status to all connected clients
+//         io.emit('user_status_change', {
+//           userId: socket.userId,
+//           userName: socket.userName,
+//           userRole: socket.userRole,
+//           status: 'offline',
+//           lastSeen: new Date(),
+//           timestamp: new Date()
+//         });
+//         console.log(`📡 Broadcasted offline status for user ${socket.userId}`);
+//       }
+//     });
+
+//     // Error handler
+//     socket.on('error', (error) => {
+//       console.error(`❌ Socket error for user ${socket.userId}:`, error);
+//     });
+//   });
+
+//   // Log server start with configuration details
+//   console.log('✅ Socket.IO server initialized successfully');
+//   console.log(`   Transport: polling + websocket upgrade`);
+//   console.log(`   Path: /socket.io`);
+//   console.log(`   Ping Interval: 25s | Ping Timeout: 60s`);
+  
+//   return io;
+// };
+
+// /**
+//  * Get Socket.IO instance
+//  * @returns {Object} Socket.IO instance
+//  */
+// const getIO = () => {
+//   if (!io) {
+//     throw new Error('Socket.io not initialized! Call initSocket first.');
+//   }
+//   return io;
+// };
+
+// /**
+//  * Get online users count
+//  * @returns {number}
+//  */
+// const getOnlineUsersCount = () => {
+//   return connectedUsers.size;
+// };
+
+// /**
+//  * Get online users list
+//  * @returns {Array}
+//  */
+// const getOnlineUsers = () => {
+//   return Array.from(connectedUsers.values()).map(u => ({
+//     userId: u.userId,
+//     userName: u.name,
+//     userRole: u.role,
+//     userEmail: u.email,
+//     connectedAt: u.connectedAt,
+//     lastActivity: u.lastActivity
+//   }));
+// };
+
+// /**
+//  * Check if user is online
+//  * @param {string} userId - User ID to check
+//  * @returns {boolean}
+//  */
+// const isUserOnline = (userId) => {
+//   return connectedUsers.has(userId);
+// };
+
+// /**
+//  * Get user socket ID
+//  * @param {string} userId - User ID
+//  * @returns {string|null}
+//  */
+// const getUserSocketId = (userId) => {
+//   const user = connectedUsers.get(userId);
+//   return user ? user.socketId : null;
+// };
+
+// /**
+//  * Send notification to specific user
+//  * @param {string} userId - User ID
+//  * @param {Object} notification - Notification data
+//  * @returns {boolean}
+//  */
+// const sendToUser = (userId, notification) => {
+//   if (!io) return false;
+//   io.to(`user_${userId}`).emit('notification', notification);
+//   console.log(`📨 Sent notification to user ${userId}`);
+//   return true;
+// };
+
+// /**
+//  * Send message to specific user
+//  * @param {string} userId - User ID
+//  * @param {Object} message - Message data
+//  * @returns {boolean}
+//  */
+// const sendMessageToUser = (userId, message) => {
+//   if (!io) return false;
+//   io.to(`user_${userId}`).emit('direct_message', message);
+//   console.log(`💬 Sent direct message to user ${userId}`);
+//   return true;
+// };
+
+// /**
+//  * Send notification to role group
+//  * @param {string} role - User role
+//  * @param {Object} notification - Notification data
+//  * @returns {boolean}
+//  */
+// const sendToRole = (role, notification) => {
+//   if (!io) return false;
+//   io.to(`role_${role}`).emit('notification', notification);
+//   console.log(`📨 Sent notification to role ${role}`);
+//   return true;
+// };
+
+// /**
+//  * Send notification to multiple roles
+//  * @param {Array} roles - Array of role names
+//  * @param {Object} notification - Notification data
+//  * @returns {boolean}
+//  */
+// const sendToRoles = (roles, notification) => {
+//   if (!io) return false;
+//   roles.forEach(role => {
+//     io.to(`role_${role}`).emit('notification', notification);
+//   });
+//   console.log(`📨 Sent notification to roles: ${roles.join(', ')}`);
+//   return true;
+// };
+
+// /**
+//  * Send notification to building
+//  * @param {string} buildingId - Building ID
+//  * @param {Object} notification - Notification data
+//  * @returns {boolean}
+//  */
+// const sendToBuilding = (buildingId, notification) => {
+//   if (!io) return false;
+//   io.to(`building_${buildingId}`).emit('notification', notification);
+//   console.log(`🏢 Sent notification to building ${buildingId}`);
+//   return true;
+// };
+
+// /**
+//  * Send task update to all task followers
+//  * @param {string} taskId - Task ID
+//  * @param {Object} update - Update data
+//  * @returns {boolean}
+//  */
+// const sendTaskUpdate = (taskId, update) => {
+//   if (!io) return false;
+//   io.to(`task_${taskId}`).emit('task_update', update);
+//   console.log(`📋 Sent task update for task ${taskId}`);
+//   return true;
+// };
+
+// /**
+//  * Send complaint update to all complaint followers
+//  * @param {string} complaintId - Complaint ID
+//  * @param {Object} update - Update data
+//  * @returns {boolean}
+//  */
+// const sendComplaintUpdate = (complaintId, update) => {
+//   if (!io) return false;
+//   io.to(`complaint_${complaintId}`).emit('complaint_update', update);
+//   console.log(`⚠️ Sent complaint update for complaint ${complaintId}`);
+//   return true;
+// };
+
+// /**
+//  * Send message to chat room
+//  * @param {string} chatId - Chat ID
+//  * @param {Object} message - Message data
+//  * @returns {boolean}
+//  */
+// const sendToChatRoom = (chatId, message) => {
+//   if (!io) return false;
+//   io.to(`chat_${chatId}`).emit('chat_message', message);
+//   console.log(`💬 Sent message to chat room ${chatId}`);
+//   return true;
+// };
+
+// /**
+//  * Broadcast to all connected clients
+//  * @param {string} event - Event name
+//  * @param {Object} data - Event data
+//  * @returns {boolean}
+//  */
+// const broadcast = (event, data) => {
+//   if (!io) return false;
+//   io.emit(event, data);
+//   console.log(`📡 Broadcasted event ${event} to all clients`);
+//   return true;
+// };
+
+// /**
+//  * Get user connection info
+//  * @param {string} userId - User ID
+//  * @returns {Object|null}
+//  */
+// const getUserConnectionInfo = (userId) => {
+//   return connectedUsers.get(userId) || null;
+// };
+
+// /**
+//  * Update user activity
+//  * @param {string} userId - User ID
+//  */
+// const updateUserActivity = (userId) => {
+//   const user = connectedUsers.get(userId);
+//   if (user) {
+//     user.lastActivity = new Date();
+//     connectedUsers.set(userId, user);
+//   }
+// };
+
+// module.exports = {
+//   initSocket,
+//   getIO,
+//   getOnlineUsersCount,
+//   getOnlineUsers,
+//   isUserOnline,
+//   getUserSocketId,
+//   sendToUser,
+//   sendMessageToUser,
+//   sendToRole,
+//   sendToRoles,
+//   sendToBuilding,
+//   sendTaskUpdate,
+//   sendComplaintUpdate,
+//   sendToChatRoom,
+//   broadcast,
+//   getUserConnectionInfo,
+//   updateUserActivity
+// };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const socketIO = require('socket.io');
 const jwt = require('jsonwebtoken');
 const { logger } = require('../utils/logger');
 
 let io;
-let connectedUsers = new Map(); // userId -> { socketId, socket, userInfo }
+let connectedUsers = new Map(); // userId -> { socketId, socket, userInfo, connectedAt, lastActivity }
 
 /**
  * Initialize Socket.IO with the HTTP server
  * @param {Object} server - HTTP server instance
  * @returns {Object} Socket.IO instance
+ * 
+ * CONFIGURATION EXPLANATION:
+ * - cors: Allows cross-origin requests from frontend
+ * - transports: ['polling', 'websocket'] - Starts with HTTP polling, upgrades to WebSocket
+ * - pingTimeout: How long to wait for pong response before disconnecting
+ * - pingInterval: How often to send ping/pong to keep connection alive
+ * - path: The URL path for socket connections
+ * - connectTimeout: Maximum time allowed for connection establishment
+ * - maxHttpBufferSize: Maximum message size (1MB)
  */
 const initSocket = (server) => {
   console.log('🚀 Initializing Socket.IO server...');
@@ -896,21 +2335,21 @@ const initSocket = (server) => {
       credentials: true,
       allowedHeaders: ['Content-Type', 'Authorization']
     },
-    transports: ['polling', 'websocket'], // Polling first, then upgrade to websocket
-    pingTimeout: 60000,
-    pingInterval: 25000,
-    allowEIO3: true,
-    path: '/socket.io',
-    connectTimeout: 45000,
-    maxHttpBufferSize: 1e6
+    transports: ['polling', 'websocket'], // Start with polling, upgrade to WebSocket
+    pingTimeout: 60000,      // 60 seconds - Wait 60s for pong before considering connection dead
+    pingInterval: 25000,     // 25 seconds - Send ping every 25s to keep connection alive
+    allowEIO3: true,         // Allow Engine.IO version 3 clients
+    path: '/socket.io',      // Default socket.io path
+    connectTimeout: 45000,   // 45 seconds - Timeout for initial connection
+    maxHttpBufferSize: 1e6   // 1 MB - Maximum message size
   });
 
-  // Debug: Log all socket events
+  // Debug: Log socket engine errors
   io.engine.on('connection_error', (err) => {
     console.error('❌ Socket engine connection error:', err);
   });
 
-  // Authentication middleware with better error handling
+  // ==================== AUTHENTICATION MIDDLEWARE ====================
   io.use(async (socket, next) => {
     console.log('🔐 Socket authentication attempt...');
     
@@ -925,10 +2364,12 @@ const initSocket = (server) => {
       console.log(`📝 Token received: ${token.substring(0, 20)}...`);
       
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      
       socket.userId = decoded.userId || decoded.id;
       socket.userRole = decoded.role;
       socket.userEmail = decoded.email;
       socket.userName = decoded.name || `${decoded.firstName} ${decoded.lastName}`;
+      socket.userDepartment = decoded.department;
       
       console.log(`✅ Socket authenticated: User ${socket.userId} (${socket.userRole})`);
       next();
@@ -938,7 +2379,7 @@ const initSocket = (server) => {
     }
   });
 
-  // Connection handler with detailed logging
+  // ==================== CONNECTION HANDLER ====================
   io.on('connection', async (socket) => {
     const connectionTime = new Date();
     console.log(`\n🔌 [${connectionTime.toISOString()}] New client connected:`);
@@ -948,7 +2389,7 @@ const initSocket = (server) => {
     console.log(`   User Name: ${socket.userName}`);
     console.log(`   Transport: ${socket.conn.transport.name}`);
 
-    // Store user connection info
+    // ==================== STORE CONNECTION INFO ====================
     connectedUsers.set(socket.userId, {
       socketId: socket.id,
       socket: socket,
@@ -956,6 +2397,7 @@ const initSocket = (server) => {
       role: socket.userRole,
       email: socket.userEmail,
       name: socket.userName,
+      department: socket.userDepartment,
       connectedAt: connectionTime,
       lastActivity: new Date(),
       ip: socket.handshake.address
@@ -963,7 +2405,7 @@ const initSocket = (server) => {
 
     console.log(`📊 Total connected users: ${connectedUsers.size}`);
 
-    // Update user online status in database
+    // ==================== UPDATE DATABASE ====================
     try {
       const User = require('../models/User.model');
       const updatedUser = await User.findByIdAndUpdate(socket.userId, {
@@ -981,19 +2423,18 @@ const initSocket = (server) => {
       console.error('❌ Error updating user online status:', error.message);
     }
 
-    // Join user-specific room
+    // ==================== JOIN ROOMS ====================
     if (socket.userId) {
       socket.join(`user_${socket.userId}`);
       console.log(`📱 User ${socket.userId} joined personal room: user_${socket.userId}`);
     }
 
-    // Join role-specific room
     if (socket.userRole) {
       socket.join(`role_${socket.userRole}`);
       console.log(`👥 User ${socket.userId} joined role room: role_${socket.userRole}`);
     }
 
-    // Broadcast user online status to all connected clients
+    // ==================== BROADCAST ONLINE STATUS ====================
     const onlineEvent = {
       userId: socket.userId,
       userName: socket.userName,
@@ -1004,13 +2445,14 @@ const initSocket = (server) => {
     io.emit('user_status_change', onlineEvent);
     console.log(`📡 Broadcasted online status for user ${socket.userId}`);
 
-    // Send current online users list to the newly connected user
+    // ==================== SEND ONLINE USERS LIST ====================
     const onlineUsersList = Array.from(connectedUsers.values())
       .filter(u => u.userId !== socket.userId)
       .map(u => ({
         userId: u.userId,
         userName: u.name,
         userRole: u.role,
+        userEmail: u.email,
         connectedAt: u.connectedAt,
         lastActivity: u.lastActivity
       }));
@@ -1020,118 +2462,186 @@ const initSocket = (server) => {
 
     // ==================== CHAT EVENT HANDLERS ====================
 
+    // Join user's personal room (for direct messages)
+    socket.on('join_user_room', (userId) => {
+      if (userId) {
+        socket.join(`user_${userId}`);
+        console.log(`🏠 User ${socket.userId} joined personal room: user_${userId}`);
+        
+        // Confirm room joined
+        socket.emit('room_joined', { room: `user_${userId}`, userId: socket.userId });
+      }
+    });
+
+    // Leave user's personal room
+    socket.on('leave_user_room', (userId) => {
+      if (userId) {
+        socket.leave(`user_${userId}`);
+        console.log(`🚪 User ${socket.userId} left personal room: user_${userId}`);
+      }
+    });
+
     // Join chat room
     socket.on('join_chat', (chatId) => {
-      socket.join(`chat_${chatId}`);
-      console.log(`💬 [${new Date().toISOString()}] User ${socket.userId} joined chat room: ${chatId}`);
-      
-      // Notify other users in chat that user joined
-      socket.to(`chat_${chatId}`).emit('user_joined_chat', {
-        userId: socket.userId,
-        userName: socket.userName,
-        chatId: chatId,
-        timestamp: new Date()
-      });
+      if (chatId) {
+        socket.join(`chat_${chatId}`);
+        console.log(`💬 User ${socket.userId} joined chat room: ${chatId}`);
+        
+        socket.to(`chat_${chatId}`).emit('user_joined_chat', {
+          userId: socket.userId,
+          userName: socket.userName,
+          chatId: chatId,
+          timestamp: new Date()
+        });
+      }
     });
 
     // Leave chat room
     socket.on('leave_chat', (chatId) => {
-      socket.leave(`chat_${chatId}`);
-      console.log(`💬 [${new Date().toISOString()}] User ${socket.userId} left chat room: ${chatId}`);
-      
-      socket.to(`chat_${chatId}`).emit('user_left_chat', {
-        userId: socket.userId,
-        userName: socket.userName,
-        chatId: chatId,
-        timestamp: new Date()
-      });
+      if (chatId) {
+        socket.leave(`chat_${chatId}`);
+        console.log(`👋 User ${socket.userId} left chat room: ${chatId}`);
+        
+        socket.to(`chat_${chatId}`).emit('user_left_chat', {
+          userId: socket.userId,
+          userName: socket.userName,
+          chatId: chatId,
+          timestamp: new Date()
+        });
+      }
     });
 
-    // Send new message with detailed logging
+    // Handle typing indicator (single unified handler)
+    socket.on('typing', (data) => {
+      const { chatId, to, name, isTyping } = data;
+      
+      console.log(`⌨️ User ${socket.userId} ${isTyping ? 'started' : 'stopped'} typing in chat ${chatId}`);
+      
+      const typingData = {
+        userId: socket.userId,
+        userName: name || socket.userName,
+        chatId: chatId,
+        isTyping: isTyping === true,
+        timestamp: new Date()
+      };
+      
+      // Broadcast to chat room
+      if (chatId) {
+        socket.to(`chat_${chatId}`).emit('user_typing', typingData);
+      }
+      
+      // Send directly to specific user if provided
+      if (to && to !== socket.userId) {
+        io.to(`user_${to}`).emit('user_typing', typingData);
+      }
+    });
+
+    // Send new message
     socket.on('new_message', (data) => {
-      const { chatId, message } = data;
-      console.log(`💬 [${new Date().toISOString()}] New message:`);
+      const { chatId, message, to } = data;
+      
+      console.log(`💬 New message:`);
       console.log(`   Chat ID: ${chatId}`);
       console.log(`   From: ${socket.userId} (${socket.userName})`);
-      console.log(`   Message: ${message?.substring(0, 50)}${message?.length > 50 ? '...' : ''}`);
+      console.log(`   To: ${to || 'All in chat'}`);
+      console.log(`   Message: ${message?.message?.substring(0, 50) || message?.substring(0, 50)}...`);
       
-      // Broadcast to all users in the chat room
-      io.to(`chat_${chatId}`).emit('new_message', {
+      const messageData = {
         chatId: chatId,
-        message: message,
+        message: message.message || message,
+        messageId: message._id,
         senderId: socket.userId,
         senderName: socket.userName,
         senderRole: socket.userRole,
         timestamp: new Date()
-      });
+      };
+      
+      // Send to chat room (all participants)
+      if (chatId) {
+        io.to(`chat_${chatId}`).emit('new_message', messageData);
+      }
+      
+      // Send directly to specific recipient if provided
+      if (to && to !== socket.userId) {
+        io.to(`user_${to}`).emit('new_message', messageData);
+      }
     });
 
-    // Typing indicator start
-    socket.on('typing_start', (data) => {
-      const { chatId, userName } = data;
-      console.log(`⌨️ User ${socket.userId} started typing in chat ${chatId}`);
-      socket.to(`chat_${chatId}`).emit('user_typing', {
-        userId: socket.userId,
-        userName: userName || socket.userName,
-        chatId: chatId,
-        isTyping: true,
-        timestamp: new Date()
-      });
-    });
-
-    // Typing indicator stop
-    socket.on('typing_stop', (data) => {
-      const { chatId, userName } = data;
-      console.log(`⌨️ User ${socket.userId} stopped typing in chat ${chatId}`);
-      socket.to(`chat_${chatId}`).emit('user_typing', {
-        userId: socket.userId,
-        userName: userName || socket.userName,
-        chatId: chatId,
-        isTyping: false,
-        timestamp: new Date()
-      });
-    });
-
-    // Message read receipt
+    // Mark message as read
     socket.on('message_read', (data) => {
-      const { messageId, chatId } = data;
+      const { messageId, chatId, to } = data;
       console.log(`👁️ User ${socket.userId} read message ${messageId} in chat ${chatId}`);
-      io.to(`chat_${chatId}`).emit('message_read', {
+      
+      const readReceipt = {
         messageId: messageId,
         chatId: chatId,
         userId: socket.userId,
         userName: socket.userName,
         readAt: new Date()
-      });
+      };
+      
+      if (chatId) {
+        io.to(`chat_${chatId}`).emit('message_read', readReceipt);
+      }
+      
+      if (to) {
+        io.to(`user_${to}`).emit('message_read', readReceipt);
+      }
     });
 
-    // Message delivered receipt
+    // Mark message as delivered
     socket.on('message_delivered', (data) => {
-      const { messageId, chatId } = data;
+      const { messageId, chatId, to } = data;
       console.log(`📬 Message ${messageId} delivered to user ${socket.userId}`);
-      io.to(`chat_${chatId}`).emit('message_delivered', {
+      
+      const deliveredReceipt = {
         messageId: messageId,
         chatId: chatId,
         userId: socket.userId,
         deliveredAt: new Date()
+      };
+      
+      if (chatId) {
+        io.to(`chat_${chatId}`).emit('message_delivered', deliveredReceipt);
+      }
+      
+      if (to) {
+        io.to(`user_${to}`).emit('message_delivered', deliveredReceipt);
+      }
+    });
+
+    // Mark entire chat as read
+    socket.on('mark_chat_read', (data) => {
+      const { chatId } = data;
+      console.log(`✅ User ${socket.userId} marked chat ${chatId} as read`);
+      
+      io.to(`chat_${chatId}`).emit('chat_read', {
+        chatId: chatId,
+        userId: socket.userId,
+        readAt: new Date()
       });
     });
 
     // ==================== TASK EVENT HANDLERS ====================
 
     socket.on('join_task_room', (taskId) => {
-      socket.join(`task_${taskId}`);
-      console.log(`📋 User ${socket.userId} joined task room: ${taskId}`);
+      if (taskId) {
+        socket.join(`task_${taskId}`);
+        console.log(`📋 User ${socket.userId} joined task room: ${taskId}`);
+      }
     });
 
     socket.on('leave_task_room', (taskId) => {
-      socket.leave(`task_${taskId}`);
-      console.log(`📋 User ${socket.userId} left task room: ${taskId}`);
+      if (taskId) {
+        socket.leave(`task_${taskId}`);
+        console.log(`📋 User ${socket.userId} left task room: ${taskId}`);
+      }
     });
 
     socket.on('task_update', (data) => {
       const { taskId, status, progress, notes } = data;
       console.log(`📋 Task update: ${taskId} -> ${status} (${progress}%)`);
+      
       io.to(`task_${taskId}`).emit('task_updated', {
         taskId,
         status,
@@ -1146,6 +2656,7 @@ const initSocket = (server) => {
     socket.on('task_completed', (data) => {
       const { taskId, completedAt, evidence } = data;
       console.log(`✅ Task completed: ${taskId} by ${socket.userName}`);
+      
       io.to(`task_${taskId}`).emit('task_completed_event', {
         taskId,
         completedAt,
@@ -1159,6 +2670,7 @@ const initSocket = (server) => {
     socket.on('task_verified', (data) => {
       const { taskId, verified, notes, rating } = data;
       console.log(`🔍 Task verified: ${taskId} -> ${verified ? 'Approved' : 'Rejected'}`);
+      
       io.to(`task_${taskId}`).emit('task_verified_event', {
         taskId,
         verified,
@@ -1173,18 +2685,23 @@ const initSocket = (server) => {
     // ==================== COMPLAINT EVENT HANDLERS ====================
 
     socket.on('join_complaint_room', (complaintId) => {
-      socket.join(`complaint_${complaintId}`);
-      console.log(`⚠️ User ${socket.userId} joined complaint room: ${complaintId}`);
+      if (complaintId) {
+        socket.join(`complaint_${complaintId}`);
+        console.log(`⚠️ User ${socket.userId} joined complaint room: ${complaintId}`);
+      }
     });
 
     socket.on('join_building_room', (buildingId) => {
-      socket.join(`building_${buildingId}`);
-      console.log(`🏢 User ${socket.userId} joined building room: ${buildingId}`);
+      if (buildingId) {
+        socket.join(`building_${buildingId}`);
+        console.log(`🏢 User ${socket.userId} joined building room: ${buildingId}`);
+      }
     });
 
     socket.on('complaint_update', (data) => {
       const { complaintId, status, notes } = data;
       console.log(`⚠️ Complaint update: ${complaintId} -> ${status}`);
+      
       io.to(`complaint_${complaintId}`).emit('complaint_updated', {
         complaintId,
         status,
@@ -1199,6 +2716,7 @@ const initSocket = (server) => {
 
     socket.on('notification_read', (notificationId) => {
       console.log(`🔔 User ${socket.userId} read notification ${notificationId}`);
+      
       io.to(`user_${socket.userId}`).emit('notification_read_confirmation', {
         notificationId,
         readAt: new Date()
@@ -1207,6 +2725,7 @@ const initSocket = (server) => {
 
     socket.on('mark_all_notifications_read', () => {
       console.log(`🔔 User ${socket.userId} marked all notifications as read`);
+      
       io.to(`user_${socket.userId}`).emit('all_notifications_read', {
         userId: socket.userId,
         markedAt: new Date()
@@ -1223,7 +2742,7 @@ const initSocket = (server) => {
       }
       
       if (typeof callback === 'function') {
-        callback({ pong: true, timestamp: new Date() });
+        callback({ pong: true, timestamp: new Date(), userId: socket.userId });
       }
     });
 
@@ -1240,29 +2759,24 @@ const initSocket = (server) => {
       console.log(`   Socket ID: ${socket.id}`);
       console.log(`   User ID: ${socket.userId}`);
       console.log(`   Reason: ${reason}`);
+      console.log(`   Transport: ${socket.conn.transport.name}`);
       
-      // Remove from connected users map
       if (socket.userId) {
         connectedUsers.delete(socket.userId);
         console.log(`📊 Total connected users: ${connectedUsers.size}`);
         
-        // Update user offline status in database
         try {
           const User = require('../models/User.model');
-          const updatedUser = await User.findByIdAndUpdate(socket.userId, {
+          await User.findByIdAndUpdate(socket.userId, {
             isUserOnline: false,
             lastSeen: new Date(),
             socketId: null
-          }, { new: true });
-          
-          if (updatedUser) {
-            console.log(`✅ User ${socket.userId} offline status updated in database`);
-          }
+          });
+          console.log(`✅ User ${socket.userId} offline status updated`);
         } catch (error) {
           console.error('❌ Error updating user offline status:', error.message);
         }
         
-        // Broadcast user offline status
         io.emit('user_status_change', {
           userId: socket.userId,
           userName: socket.userName,
@@ -1275,16 +2789,15 @@ const initSocket = (server) => {
       }
     });
 
-    // Error handler
     socket.on('error', (error) => {
       console.error(`❌ Socket error for user ${socket.userId}:`, error);
     });
   });
 
-  // Log server start
   console.log('✅ Socket.IO server initialized successfully');
   console.log(`   Transport: polling + websocket upgrade`);
   console.log(`   Path: /socket.io`);
+  console.log(`   Ping Interval: 25s | Ping Timeout: 60s`);
   
   return io;
 };
@@ -1317,6 +2830,7 @@ const getOnlineUsers = () => {
     userId: u.userId,
     userName: u.name,
     userRole: u.role,
+    userEmail: u.email,
     connectedAt: u.connectedAt,
     lastActivity: u.lastActivity
   }));
@@ -1481,7 +2995,6 @@ const updateUserActivity = (userId) => {
   }
 };
 
-// Export all functions
 module.exports = {
   initSocket,
   getIO,
